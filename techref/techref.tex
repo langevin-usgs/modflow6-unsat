@@ -1,0 +1,206 @@
+\documentclass[fleqn]{article}
+\author{tbd}
+
+\usepackage{amsmath}
+
+\begin{document}
+
+\title{Variably Saturated Flow in MODFLOW 6}
+\maketitle
+
+\tableofcontents
+
+\section{Theoretical Development}
+In this section ...
+
+\subsection{Conservation of Mass}
+Given a volume of porous medium $V$ bounded by a surface $\sigma$ as
+shown in figure~[tbd], conservation of mass for liquid water
+requires that the following equation be satisfied:
+\begin{equation}
+  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV +
+  \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \int_V \rho \Gamma \,dV = 0,
+  \label{eq-conservation}
+\end{equation}
+where
+\begin{eqnarray*}
+  \rho &=& \textrm{liquid density, [ML\textsuperscript{-3}]} \\
+  s &=& \textrm{liquid saturation, [L\textsuperscript{0}]} \\
+  \phi &=& \textrm{porosity, [L\textsuperscript{0}]} \\
+  t &=& \textrm{time, [T]} \\
+  \mathbf{q} &=& \textrm{vector of liquid flux per unit area, [LT\textsuperscript{-1}]} \\
+  \mathbf{n} &=& \textrm{normal vector to the surface $\sigma$, [L\textsuperscript{0}]} \\
+  \Gamma &=& \textrm{volumetric source-sink term accounting for liquid added to} \\
+         && \textrm{($\Gamma > 0$) or taken away ($-\Gamma < 0$) from the volume $\Omega$, per unit} \\
+         && \textrm{volume per unit time, [T\textsuperscript{-1}]}
+\end{eqnarray*}
+Equation~\ref{eq-conservation} states that the rate of change of
+mass stored in $V$ must be balanced by the sum of liquid flux across
+the surface boundary of $V$ and of liquid added by sources or removed
+at sinks.
+
+It is assumed that the volume $V$ is small enough that within $V$, the
+liquid density ($\rho$), saturation ($s$), and porosity ($\phi$) can be
+considered constant "representative" values, so that the first term of
+equation~\ref{eq-conservation} can be expressed as
+\begin{equation}
+  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV = 
+  V \frac{\partial (\rho s \phi)}{\partial t},
+\end{equation}
+and the third term as
+\begin{equation}
+  \int_V \rho \Gamma \,dV = \rho \Gamma V.
+\end{equation}
+Equation~\ref{eq-conservation} then becomes
+\begin{equation}
+  V \frac{\partial (\rho s \phi)}{\partial t} +
+  \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \rho \Gamma V = 0.
+\end{equation}
+
+\subsection{Fluid-Flux Equation}
+The fluid flux $\mathbf{q}$ is given by Darcy's law for unsaturated flow:
+\begin{equation}
+  \mathbf{q} = - \frac{\mathbf{k}(s)}{\mu} \cdot ( \nabla p + \rho g \nabla z ),
+\end{equation}
+where the permeability of the medium $\mathbf{k}$ depends on its saturation $s$,
+$\mu$ is the dynamic viscosity, $p$ the pressure of the fluid, and $g$ the
+gravitational acceleration. For constant density and ignoring the temperature
+dependence of viscosity, this can be writtten in terms of piezometric head as
+\begin{equation}
+  \mathbf{q} = - \mathbf{K}(s) \cdot \nabla h,
+\end{equation}
+with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. The concept of relative
+permeability can be used to rewrite this expression such that its relation
+to the fully saturated case becomes apparent:
+\begin{equation}
+  \mathbf{q} = - \mathbf{k}_\text{r}(s) \cdot
+  \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
+\end{equation}
+where the relative permeability $\mathbf{k}_r$ is a rank-2 tensor as well and
+$\mathbf{K}_\text{sat}$ is the hydraulic conductivity tensor at full saturation.
+
+For now we assume that relative permeability is isotropic (!!) and that this 
+can be further simplified as
+\begin{equation}
+  \mathbf{q} = - k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
+\end{equation}
+with $k_r$ a scalar function of saturation.
+
+Substituting the expression for the fluid flux into equation~\ref{eq-conservation}
+leads to
+\begin{equation}
+  V \frac{\partial (\rho s \phi)}{\partial t} -
+  \oint_\sigma \rho k_\text{r}(s) \mathbf{K}_{\textrm{sat}}
+  \cdot \nabla h \cdot \mathbf{n} d\sigma -
+  \rho \Gamma V = 0.
+\end{equation}
+
+If the terms in the surface integral can be considered constant over each of the 
+$m$ faces of an arbitrary prismatic volume element (isotropic!?), 
+this can be written as:
+\begin{equation}
+  V \frac{\partial (\rho s \phi)}{\partial t} -
+  \rho \sum_{\alpha=1}^{m} \overline{k_r K}
+  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
+  \rho \Gamma V = 0,
+  \label{eq-diff-csv}
+\end{equation}
+where $\sigma_\alpha$ equals the area of the $\alpha$ face and the bar indicates 
+that an effective value is used for hydraulic conductivity, to be discussed 
+in more detail in section~\ref{sec-cond-avg}. Additionally, the head 
+gradient is assumed to be normal to the faces bounding the volume which
+means that for any face $\alpha$ it follows that:
+$(\nabla h)_\alpha = (\partial h/\partial n)_\alpha \mathbf{n_\alpha}$.
+
+\subsection{Storage Term}
+The change in mass of water that is held in storage is expressed by the first 
+term in equation~\ref{eq-diff-csv}. Applying the chain rule results in
+\begin{equation}
+  \frac{\partial (\rho s \phi)}{\partial t} =
+  \underbrace{s \phi \frac{\partial \rho}{\partial t}}_\text{A} +
+  \underbrace{\rho \phi \frac{\partial s}{\partial t}}_\text{B} +
+  \underbrace{\rho s \frac{\partial \phi}{\partial t}}_\text{C},
+\end{equation}
+with three distinct effects that contribute to the added mass of water: fluid
+compressibility (A), change in saturation (B), and the compressibility of the
+solid matrix (C). \textit{In what follows, we will assume that the porous medium
+is non-deformable: $\partial \phi/\partial t = 0$. ..... not true}
+
+In the model, the principal dependent variable used for solving the system
+of equations is hydraulic head and, again using the chain rule, the equation
+for change in storage can be rewritten as follows:
+\begin{equation}
+  \frac{\partial (\rho s \phi)}{\partial t} =
+  \left(
+    \rho s S_s + \rho C_m
+  \right)
+  \frac{\partial h}{\partial t},
+  \label{eq-sto}
+\end{equation}
+where specific storage is given by 
+\begin{equation}
+  S_s = \rho g \phi \beta_c + ...,
+\end{equation}
+with $\beta_c$, the fluid compressibility coefficient, equal to
+\begin{equation}
+  \beta_c = \frac{1}{\rho}\frac{\partial \rho}{\partial p},
+\end{equation}
+and where we have used the assumption that the density of water depends
+on pressure only: $\rho = \rho(p)$. The change in saturation resulting 
+from a change in pressure head ($h_p$) is captured by the specific 
+moisture capacity, which is the slope of the moisture retention curve: 
+$C_m = \partial \theta / \partial h_p$.
+
+\subsection{Variably Saturated Flow Equation}
+Putting the results from previous sections together, substituting the storage terms
+from equation~\ref{eq-sto} into the differential form of the balance law
+given by equation~\ref{eq-diff-csv}, leads to the following nonlinear
+partial differential equation for unsaturated zone flow:
+\begin{equation}  
+  V
+  \left(
+    \rho s S_s + \rho C_m
+  \right)
+  \frac{\partial h}{\partial t} -
+  \rho \sum_{\alpha=1}^{m} \overline{k_r K}
+  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
+  \rho \Gamma V = 0.
+\end{equation}
+with
+\begin{eqnarray*}
+  V &=& \textrm{the representative elementary volume} \\
+  \rho &=& \textrm{water density} \\
+  s &=& \textrm{water saturation} \\
+  S_s &=& \textrm{specific storage} \\
+  C_m &=& \textrm{specific moisture capacity} \\
+  h &=& \textrm{hydraulic head} \\
+  k_r &=& \textrm{relative permeability} \\
+  K &=& \textrm{hydraulic conductivity} \\
+  \sigma_\alpha &=& \textrm{surface area of face $\alpha$} \\
+  \Gamma &=& \textrm{volumetric source-sink term}
+\end{eqnarray*}
+
+\subsection{Initial and Boundary Conditions}
+
+\subsection{Analytical Functions for Soil Properties}
+\subsubsection*{Water Retention Curve}
+\subsubsection*{Specific Moisture Capacity}
+\subsubsection*{Relative Hydraulic Conductivity}
+\subsection{Hysteresis}
+
+\section{Numerical Solution}
+\subsection{Spatial Discretization}
+\subsection{Intercell Averaging of Conductance Terms}\label{sec-cond-avg}
+\subsubsection*{Saturated Hydraulic Conductivity}
+\subsubsection*{Relative Hydraulic Conductivity}
+\subsection{Temporal Discretization}
+\subsection{Linearization}
+
+
+\section{Model Verification}
+\subsection{Analytical Results}
+\subsection{Example Problems}
+
+\end{document}
