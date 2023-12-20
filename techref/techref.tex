@@ -1,5 +1,5 @@
 \documentclass[fleqn]{article}
-\author{tbd}
+\author{Authors from Deltares and USGS}
 
 \usepackage{amsmath}
 
@@ -14,35 +14,50 @@
 In this section ...
 
 \subsection{Conservation of Mass}
-Given a volume of porous medium $V$ bounded by a surface $\sigma$ as
-shown in figure~[tbd], conservation of mass for liquid water
-requires that the following equation be satisfied:
+In case of variably saturated flow, the void space is occupied by 
+two fluid phases, air and water, and a full description includes
+the simultaneous flow of both phases. For the process described here
+it is assumed that there is no mass transfer between the fases and
+the air is stagnant such that its pressure equals zero everywhere.
+Under those conditions, the differential macroscopic mass balance 
+equation for the water phase has the form (c.f. equation~(6.3.3)
+in Bear and Cheng, 2010):
+
+\begin{equation}
+  \frac{\partial (\rho s \phi)}{\partial t} +
+  \nabla \cdot (\rho \mathbf{q}) -
+  \rho \Gamma = 0,
+  \label{eq-balance-equation}
+\end{equation}
+where
+\begin{eqnarray*}
+  \rho &=& \textrm{liquid density, [ML\textsuperscript{-3}]} \\
+  s &=& \textrm{liquid saturation, [-]} \\
+  \phi &=& \textrm{porosity, [-]} \\
+  t &=& \textrm{time, [T]} \\
+  \mathbf{q} &=& \textrm{vector of liquid flux per unit area, [LT\textsuperscript{-1}]} \\
+  \Gamma &=& \textrm{volumetric source-sink term accounting for liquid added to} \\
+  && \textrm{($\Gamma > 0$) or taken away ($-\Gamma < 0$) from the volume $\Omega$, per unit} \\
+  && \textrm{volume per unit time, [T\textsuperscript{-1}]}
+\end{eqnarray*}
+Integrating equation~\ref{eq-balance-equation} over a volume of porous
+medium $V$ bounded by a surface $\sigma$, and applying Gauss's theorem
+leads to:
 \begin{equation}
   \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV +
   \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
   \int_V \rho \Gamma \,dV = 0,
   \label{eq-conservation}
 \end{equation}
-where
-\begin{eqnarray*}
-  \rho &=& \textrm{liquid density, [ML\textsuperscript{-3}]} \\
-  s &=& \textrm{liquid saturation, [L\textsuperscript{0}]} \\
-  \phi &=& \textrm{porosity, [L\textsuperscript{0}]} \\
-  t &=& \textrm{time, [T]} \\
-  \mathbf{q} &=& \textrm{vector of liquid flux per unit area, [LT\textsuperscript{-1}]} \\
-  \mathbf{n} &=& \textrm{normal vector to the surface $\sigma$, [L\textsuperscript{0}]} \\
-  \Gamma &=& \textrm{volumetric source-sink term accounting for liquid added to} \\
-         && \textrm{($\Gamma > 0$) or taken away ($-\Gamma < 0$) from the volume $\Omega$, per unit} \\
-         && \textrm{volume per unit time, [T\textsuperscript{-1}]}
-\end{eqnarray*}
+where $\mathbf{n}$ equals the normal vector to the surface $\sigma$. 
 Equation~\ref{eq-conservation} states that the rate of change of
 mass stored in $V$ must be balanced by the sum of liquid flux across
 the surface boundary of $V$ and of liquid added by sources or removed
 at sinks.
 
-It is assumed that the volume $V$ is small enough that within $V$, the
+The volume $V$ is assumed small enough that within it, the
 liquid density ($\rho$), saturation ($s$), and porosity ($\phi$) can be
-considered constant "representative" values, so that the first term of
+considered constant "representative" values, such that the first term of
 equation~\ref{eq-conservation} can be expressed as
 \begin{equation}
   \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV = 
@@ -52,7 +67,7 @@ and the third term as
 \begin{equation}
   \int_V \rho \Gamma \,dV = \rho \Gamma V.
 \end{equation}
-Equation~\ref{eq-conservation} then becomes
+Equation~\ref{eq-conservation} now becomes
 \begin{equation}
   V \frac{\partial (\rho s \phi)}{\partial t} +
   \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
@@ -116,21 +131,38 @@ $(\nabla h)_\alpha = (\partial h/\partial n)_\alpha \mathbf{n_\alpha}$.
 
 \subsection{Storage Term}
 The change in mass of water that is held in storage is expressed by the first 
-term in equation~\ref{eq-diff-csv}. Applying the chain rule results in
+term in equation~\ref{eq-diff-csv}. To express this in terms of hydraulic
+head, the principal dependent variable for solving the system of equations,
+the chain rule is applied:
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} =
-  \underbrace{s \phi \frac{\partial \rho}{\partial t}}_\text{A} +
-  \underbrace{\rho \phi \frac{\partial s}{\partial t}}_\text{B} +
-  \underbrace{\rho s \frac{\partial \phi}{\partial t}}_\text{C},
+  \left[
+    s \phi \frac{\partial \rho}{\partial h} +
+    \rho \phi \frac{\partial s}{\partial h} +
+    \rho s \frac{\partial \phi}{\partial h}
+  \right]
+  \frac{\partial h}{\partial t},
+  \label{eq-sto-terms}
 \end{equation}
-with three distinct effects that contribute to the added mass of water: fluid
-compressibility (A), change in saturation (B), and the compressibility of the
-solid matrix (C). \textit{In what follows, we will assume that the porous medium
-is non-deformable: $\partial \phi/\partial t = 0$. ..... not true}
-
-In the model, the principal dependent variable used for solving the system
-of equations is hydraulic head and, again using the chain rule, the equation
-for change in storage can be rewritten as follows:
+with between brackets three distinct terms contributing to the water 
+added to or released from storage due to changes of the hydraulic 
+head: the fluid compressibility term accounting for changes in the 
+fluid density $\rho$, the change in soil saturation $s$, and the (elastic) compression of the solid matrix given by the change in the porosity 
+of the medium $\phi$. For any particular type of soil or geologic formation,
+these variables are taken to be a function of pressure only. The 
+following definitions are then introduced to restructure the right-hand 
+side of equation~\ref{eq-sto-terms}:
+\begin{eqnarray*}
+  &&\text{Fluid compressibility coefficient: }
+    \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
+  &&\text{Specific moisture capacity: }
+    C_m = \phi \frac{\partial s}{\partial \psi} \\
+  &&\text{Solid matrix compressibility coefficient: }
+    \alpha_c = \frac{\partial \phi}{\partial p},
+\end{eqnarray*}
+with $\psi$ the pressure head of the soil water: $\psi = h - z$. Now
+with the approximation that the density of water depends on pressure 
+only, $\rho = \rho(p)$, the change in storage can be written as
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} =
   \left(
@@ -139,65 +171,171 @@ for change in storage can be rewritten as follows:
   \frac{\partial h}{\partial t},
   \label{eq-sto}
 \end{equation}
-where specific storage is given by 
+where specific storage is defined as
 \begin{equation}
-  S_s = \rho g \phi \beta_c + ...,
+  S_s = \rho g \left( \phi \beta_c + \alpha_c \right).
 \end{equation}
-with $\beta_c$, the fluid compressibility coefficient, equal to
-\begin{equation}
-  \beta_c = \frac{1}{\rho}\frac{\partial \rho}{\partial p},
-\end{equation}
-and where we have used the assumption that the density of water depends
-on pressure only: $\rho = \rho(p)$. The change in saturation resulting 
-from a change in pressure head ($h_p$) is captured by the specific 
-moisture capacity, which is the slope of the moisture retention curve: 
-$C_m = \partial \theta / \partial h_p$.
 
 \subsection{Variably Saturated Flow Equation}
-Putting the results from previous sections together, substituting the storage terms
-from equation~\ref{eq-sto} into the differential form of the balance law
-given by equation~\ref{eq-diff-csv}, leads to the following nonlinear
-partial differential equation for unsaturated zone flow:
+Putting the results from the previous sections together, thereby
+substituting the storage terms (equation~\ref{eq-sto}) into the 
+differential form of the balance law (equation~\ref{eq-diff-csv}), 
+leads to the following nonlinear partial differential equation for 
+variably saturated flow:
 \begin{equation}  
   V
   \left(
-    \rho s S_s + \rho C_m
+    s S_s + C_m
   \right)
   \frac{\partial h}{\partial t} -
-  \rho \sum_{\alpha=1}^{m} \overline{k_r K}
+  \sum_{\alpha=1}^{m} \overline{k_r K}
   \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
-  \rho \Gamma V = 0.
+  \Gamma V = 0.
+  \label{eq-unsat-flow}
 \end{equation}
-with
+with (repeated here for convenience):
 \begin{eqnarray*}
-  V &=& \textrm{the representative elementary volume} \\
-  \rho &=& \textrm{water density} \\
-  s &=& \textrm{water saturation} \\
-  S_s &=& \textrm{specific storage} \\
-  C_m &=& \textrm{specific moisture capacity} \\
-  h &=& \textrm{hydraulic head} \\
-  k_r &=& \textrm{relative permeability} \\
-  K &=& \textrm{hydraulic conductivity} \\
-  \sigma_\alpha &=& \textrm{surface area of face $\alpha$} \\
-  \Gamma &=& \textrm{volumetric source-sink term}
+  V &=& \text{the representative elementary volume} \\
+  s &=& \text{water saturation} \\
+  S_s &=& \text{specific storage} \\
+  C_m &=& \text{specific moisture capacity} \\
+  h &=& \text{hydraulic head} \\
+  \overline{k_r} &=& \text{effective relative permeability} \\
+  \overline{K} &=& \text{effective hydraulic conductivity} \\
+  (\partial h/\partial n)_\alpha &=& \text{head gradient normal to face $\alpha$} \\
+  \sigma_\alpha &=& \text{surface area of face $\alpha$} \\
+  \Gamma &=& \text{volumetric source-sink term}
 \end{eqnarray*}
 
-\subsection{Initial and Boundary Conditions}
+Note that as the medium approaches full saturation ($s\uparrow1$), 
+the moisture capacity $C_m$ will go to zero and $k_r$ becomes
+equal to 1. In that case, the above expression converges smoothly
+to the saturated groundwater flow equation used in MODFLOW~6.
+It is this concept of continuity that is used to integrate the 
+variably saturated flow mechanism into the existing flow formulation.
+
+
+\subsection{Initial and Boundary Conditions}\label{sec-boundary-conditions}
+
 
 \subsection{Analytical Functions for Soil Properties}
 \subsubsection*{Water Retention Curve}
 \subsubsection*{Specific Moisture Capacity}
 \subsubsection*{Relative Hydraulic Conductivity}
-\subsection{Hysteresis}
+\subsubsection*{Hysteresis}
 
 \section{Numerical Solution}
-\subsection{Spatial Discretization}
+Equation~\ref{eq-unsat-flow}, together with the boundary conditions as
+described in section~\ref{sec-boundary-conditions}, is a highly non-linear
+partial differential equation that has no general closed-form solution.
+Although it can be considered a more advanced description of unconfined
+and partially saturated groundwater flow than the standard formulation
+available in MODFLOW 6, the solution strategy is the same. The variably
+saturated flow equation is discretized using a controle-volume
+finite-difference (CVFD) method. The method replaces the continuum of
+coordinates in equation~\ref{eq-unsat-flow} with a discrete set of 
+points in space and time. The control volume is called a cell and the
+point at the center of the cell a node. The collection of cells with
+their connections is the model grid. The partial derivatives in the
+equation can be approximated by differencing head values between 
+neighbouring cells and between subsequent time values. The resulting
+finite-difference equations will have terms that are a function
+of the discretized dependent variable, such as $k_r = k_r(h)$ and 
+$s = s(h)$. These non-linearities can be overcome using a standard
+Picard iteration method\footnote{Are we planning to support non-NR
+treatment of Richards flow??} or by applying the Newton-Raphson 
+linearization that is known to provide more stability when solving for
+cells that are under a water-table condition. For each cell in the
+the grid that is under variably saturated flow conditions, the
+linearized balance terms are added to the system representing the
+motion equations in the total (saturated and unsaturated) simulation 
+domain. This system is solved by the MODFLOW iterative solver as part
+of its outer (non-linear) iteration loop.
+
+\subsubsection*{Water Balance on a Cell}
+The variably saturated flow equation in CVFD form can be used to
+express the concept of water balance on a cell $n$ as
+\begin{equation}
+  \sum_{m \in \eta_n} Q_{n,m} + Q_{n, \Gamma} - Q_{\textrm{STO}} = 0,
+  \label{eq-cell-balance}
+\end{equation}
+where
+\begin{eqnarray*}
+  Q_{n,m} &=& \text{flow rate from cell $m$ into $n$} \\
+  \eta_n &=& \text{collection of cells connected to $n$} \\
+  Q_{n,\Gamma} &=& \text{summed contribution from sources and sinks in the cell} \\
+  Q_{\textrm{STO}} &=& \text{change in volume of water stored in $n$ per unit time}
+\end{eqnarray*}
+and the terms in equation~\ref{eq-cell-balance} are all of dimension
+[L\textsuperscript{3}T\textsuperscript{-1}]. For every cell $n$, after
+reordering, this water balance equation corresponds to the 
+$n$\textsuperscript{th} row in the matrix equation
+\begin{equation}
+  \mathbf{A}\mathbf{h} = \mathbf{b},
+  \label{eq-nonlinear-system}
+\end{equation}
+where $\mathbf{A}$ equals a $n \times n$ coefficient matrix, $\mathbf{h}$
+the dependent variable vector at the end of the time step, and
+$\mathbf{b}$ the constant terms grouped in a vector that is commonly
+referred to as the right-hand side. 
+
+For general variably saturated flow problems, the coefficient matrix is 
+nonlinear and depends on the head values that are to be calculated. 
+Using the Picard iteration method, equation~\ref{eq-nonlinear-system} 
+can be written as
+\begin{equation}
+  \mathbf{\bar{A}}^{(m-1)} \mathbf{h}^{(m)} = \mathbf{b},
+\end{equation}
+such that $\mathbf{h}^{(m)}$ is the head vector at the new iteration level
+$m$ and $\mathbf{\bar{A}}^{(m-1)}$ is the linearized coefficient matrix
+that no longer depends on $\mathbf{h}^{(m)}$ but on the values from the previous
+iteration level $m-1$ instead. Repeatedly formulating 
+and solving the system until $\mathbf{h}^{(m)} \approx \mathbf{h}^{(m-1)}$ 
+gives a numerical solution of equation~\ref{eq-nonlinear-system}.
+
+In the following sections, discretized expressions are presented for
+all the terms in equation~\ref{eq-cell-balance}. These expressions,
+together with the linearization procedure and a discrete
+formulation of available initial conditions and boundary conditions, 
+are required to numerically solve the process of variably saturated 
+flow within the MODFLOW 6 framework.
+
+\subsubsection*{Newton-Raphson Linearization}
+An alternative method to ...
+\begin{equation}
+  \mathbf{J}^{k-1} \Delta \mathbf{h}^k = -\mathbf{r}^{k-1}
+\end{equation}
+
+\begin{equation}
+  \mathbf{J}^{k-1} \mathbf{h}^k = 
+  -\mathbf{r}^{k-1} + \mathbf{J}^{k-1} \mathbf{h}^{k-1}
+\end{equation}
+
+\begin{equation}
+  r_n = \sum_{m \in \eta_n} Q_{n,m} + 
+        Q_{n, \Gamma} - 
+        Q_{\textrm{STO}}
+\end{equation}
+
+\begin{equation}
+  J_{n,k} = \frac{\partial r_n}{\partial h_k}
+\end{equation}
+
+\subsection{Spatial Discretization and Internal Flows}
 \subsection{Intercell Averaging of Conductance Terms}\label{sec-cond-avg}
 \subsubsection*{Saturated Hydraulic Conductivity}
 \subsubsection*{Relative Hydraulic Conductivity}
-\subsection{Temporal Discretization}
-\subsection{Linearization}
+\subsection{Temporal Discretization and Storage}
+\subsection{Sources and Sinks}
+\subsection{Initial and Boundary Conditions}
 
+\section{Integration into MODFLOW 6}
+The capability presented in this report offers an alternative flow
+formulation in the NPF package for cells that are under variably 
+saturated conditions. The storage package (STO) has been extended
+to include a more sophisticated treatment of partially saturated
+cells. New packages have been developed to account for infiltration (INF),
+ponding (PON), ... The existing packages for ... have been modified .
 
 \section{Model Verification}
 \subsection{Analytical Results}
