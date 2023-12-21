@@ -284,14 +284,16 @@ nonlinear and depends on the head values that are to be calculated.
 Using the Picard iteration method, equation~\ref{eq-nonlinear-system} 
 can be written as
 \begin{equation}
-  \mathbf{\bar{A}}^{(m-1)} \mathbf{h}^{(m)} = \mathbf{b},
+  \mathbf{\bar{A}}^{(k-1)} \mathbf{h}^{(k)} = \mathbf{b}^{(k-1)},
+  \label{eq-linearized-system}
 \end{equation}
-such that $\mathbf{h}^{(m)}$ is the head vector at the new iteration level
-$m$ and $\mathbf{\bar{A}}^{(m-1)}$ is the linearized coefficient matrix
-that no longer depends on $\mathbf{h}^{(m)}$ but on the values from the previous
-iteration level $m-1$ instead. Repeatedly formulating 
-and solving the system until $\mathbf{h}^{(m)} \approx \mathbf{h}^{(m-1)}$ 
-gives a numerical solution of equation~\ref{eq-nonlinear-system}.
+such that $\mathbf{h}^{(k)}$ is the head vector at the new iteration level
+$k$ and $\mathbf{\bar{A}}^{(k-1)}$ is the linearized coefficient matrix
+that no longer depends on $\mathbf{h}^{(k)}$ but is evaluated using values
+from the previous iteration level $k-1$ instead, and likewise for 
+$\mathbf{b}^{(k-1)}$. Repeatedly formulating and solving the system until 
+$\mathbf{h}^{(k)} \approx \mathbf{h}^{(k-1)}$ produces the numerical 
+solution of equation~\ref{eq-nonlinear-system}.
 
 In the following sections, discretized expressions are presented for
 all the terms in equation~\ref{eq-cell-balance}. These expressions,
@@ -301,25 +303,74 @@ are required to numerically solve the process of variably saturated
 flow within the MODFLOW 6 framework.
 
 \subsubsection*{Newton-Raphson Linearization}
-An alternative method to ...
-\begin{equation}
-  \mathbf{J}^{k-1} \Delta \mathbf{h}^k = -\mathbf{r}^{k-1}
-\end{equation}
-
-\begin{equation}
-  \mathbf{J}^{k-1} \mathbf{h}^k = 
-  -\mathbf{r}^{k-1} + \mathbf{J}^{k-1} \mathbf{h}^{k-1}
-\end{equation}
-
+The Newton-Raphson method is an alternative way of linearizing the
+balance equation. First define the residual vector $\mathbf{r}$
+for a cell $n$ using the component notation as
 \begin{equation}
   r_n = \sum_{m \in \eta_n} Q_{n,m} + 
         Q_{n, \Gamma} - 
-        Q_{\textrm{STO}}
+        Q_{\textrm{STO}}.
+  \label{eq-residual-cell}
 \end{equation}
-
+The coefficients of the Jacobian matrix $\mathbf{J}$ are given by
 \begin{equation}
-  J_{n,k} = \frac{\partial r_n}{\partial h_k}
+  J_{n,k} = \frac{\partial r_n}{\partial h_k}.
+  \label{eq-jacobian}
 \end{equation}
+The strategy is to find the change in head $\Delta\mathbf{h}$ that
+drives the residual vector to zero. This can be expressed with the
+following iterative scheme:
+\begin{equation}
+  \mathbf{J}^{(k-1)} \Delta \mathbf{h}^{(k)} = -\mathbf{r}^{(k-1)}.
+\end{equation}
+Rewriting this in a form similar to equation~\ref{eq-linearized-system}
+leads to
+\begin{equation}
+  \mathbf{J}^{(k-1)} \mathbf{h}^{(k)} = 
+  -\mathbf{r}^{(k-1)} + \mathbf{J}^{(k-1)} \mathbf{h}^{(k-1)}.
+  \label{eq-newton-head}
+\end{equation}
+The last expression explicitly depends on head instead of the
+head upgrade and makes it easier to solve the problem with a
+unified implementation for the standard formulation and the
+Newton-Raphson method.
+
+Combining equations~\ref{eq-residual-cell}, \ref{eq-jacobian},
+and \ref{eq-newton-head}, and separating the diagonal and
+off-diagonal part of $\mathbf{J}$, leads to the full CVFD
+equation for the Newton-Raphson formulation:
+\begin{equation}
+\begin{split}
+  \left(
+    \sum_{m \in \eta_n} 
+      \frac{\partial Q_{n,m}}{\partial h_n} + 
+      \frac{\partial Q_{n, \Gamma}}{\partial h_n} - 
+      \frac{\partial Q_{\textrm{STO}}}{\partial h_n}
+  \right) 
+  h_n^{(k)} +
+  \sum_{m \in \eta_n} \frac{\partial Q_{n,m}}{\partial h_m} 
+  h_m^{(k)} =\\
+  - 
+  \left(
+    \sum_{m \in \eta_n} Q_{n,m} + 
+    Q_{n, \Gamma} - 
+    Q_{\textrm{STO}}
+  \right) +
+  \left(
+    \sum_{m \in \eta_n} 
+      \frac{\partial Q_{n,m}}{\partial h_n} + 
+      \frac{\partial Q_{n, \Gamma}}{\partial h_n} - 
+      \frac{\partial Q_{\textrm{STO}}}{\partial h_n}
+  \right) 
+  h_n^{(k-1)}\\
+  + \sum_{m \in \eta_n} \frac{\partial Q_{n,m}}{\partial h_m} 
+  h_m^{(k-1)}
+\end{split}
+\end{equation}
+This is the expression given in the documentation for the MODFLOW 6 
+groundwater flow model and is repeated here for convenience.
+The following sections will detail the various contributions to the
+terms in this equation.
 
 \subsection{Spatial Discretization and Internal Flows}
 \subsection{Intercell Averaging of Conductance Terms}\label{sec-cond-avg}
