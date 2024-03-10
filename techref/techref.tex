@@ -85,23 +85,62 @@ gravitational acceleration. For constant density and ignoring the temperature
 dependence of viscosity, this can be writtten in terms of piezometric head as
 \begin{equation}
   \mathbf{q} = - \mathbf{K}(s) \cdot \nabla h,
+  \label{eq-unsat-darcy-flux}
 \end{equation}
-with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. The concept of relative
-permeability can be used to rewrite this expression such that its relation
-to the fully saturated case becomes apparent:
-\begin{equation}
-  \mathbf{q} = - \mathbf{k}_\text{r}(s) \cdot
-  \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
-\end{equation}
-where the relative permeability $\mathbf{k}_r$ is a rank-2 tensor as well and
-$\mathbf{K}_\text{sat}$ is the hydraulic conductivity tensor at full saturation.
+with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. 
 
-For now we assume that relative permeability is isotropic (!!) and that this 
-can be further simplified as
+The concept of relative permeability is commonly used to
+state the dependence of the conductivity on saturation. For
+example, for an isotropic porous medium:
+\begin{equation}
+  \mathbf{q} = - k_\textrm{r}(s) K_{\textrm{sat}} \nabla h,
+\end{equation}
+where $K_\textrm{sat}$ is the hydraulic conductivity tensor at full saturation,
+the relative permeability is given by:
+\begin{equation}
+  k_\textrm{r} = \frac{K(s)}{K_{\textrm{sat}}}.
+\end{equation}
+This can be easily extended to the anisotropic case if the principal axes
+of the conductivity tensor are aligned with the coordinate axes:
+\begin{equation}
+  \mathbf{K}(s) = \mathbf{k}_{\textrm{r}} \cdot \mathbf{K}_{\textrm{sat}}
+                = 
+                \begin{bmatrix}
+                  k_r^x & 0 & 0 \\
+                  0 & k_r^y & 0 \\
+                  0 & 0 & k_r^z
+                \end{bmatrix} \cdot
+                \begin{bmatrix}
+                  K_{\text{sat}}^x & 0 & 0 \\
+                  0 & K_{\text{sat}}^y & 0 \\
+                  0 & 0 & K_{\text{sat}}^z
+                \end{bmatrix},
+\end{equation}
+although this poses the challenge to determine not one but three, in
+this case direction dependent, relative permeability functions. In case the 
+medium is anisotropic and the axes are not aligned, the conductivity tensor
+follows from the previous expression by a rotation of coordinates:
+\begin{equation}
+  \mathbf{K}(s) \rightarrow \mathbf{R} \mathbf{K}(s) \mathbf{R^T}
+                = (\mathbf{R} \mathbf{k}_{\textrm{r}} \mathbf{R^T}) \cdot 
+                  (\mathbf{R} \mathbf{K}_{\textrm{sat}} \mathbf{R^T}),
+\end{equation}
+with $\mathbf{R}$ a general three-dimensional rotation matrix such that
+$\mathbf{R}\mathbf{R^T} = \mathbf{1}$. This can in principle be used
+to treat variably saturated flow in three-dimensional anisotropic media,
+consistent with the XT3D capability \cite{modflow6xt3d} available in
+MODFLOW 6 for saturated groundwater flow. For practical reasons, such
+as limiting the challenge of calibrating the conductivities in a model,
+it is assumed that relative permeability is isotropic. This
+implies that equation~\ref{eq-unsat-darcy-flux} can be written as
 \begin{equation}
   \mathbf{q} = - k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
 \end{equation}
-with $k_r$ a scalar function of saturation.
+where $k_r$ is a scalar function of saturation. Although this approximation
+has been used in many simulation codes 
+(e.g., \cite{vs2d,modflowvsf,vosssutra,panday-surfact}), it has been
+pointed out that the effect of saturation generally depends on 
+direction \cite{bear-1987}.
 
 Substituting the expression for the fluid flux into equation~\ref{eq-conservation}
 leads to
@@ -117,7 +156,7 @@ $m$ faces of an arbitrary prismatic volume element (isotropic!?),
 this can be written as:
 \begin{equation}
   V \frac{\partial (\rho s \phi)}{\partial t} -
-  \rho \sum_{\alpha=1}^{m} \overline{k_r K}
+  \rho \sum_{\alpha=1}^{m} \overline{k_r K_{\textrm{sat}}}
   \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
   \rho \Gamma V = 0,
   \label{eq-diff-csv}
@@ -159,9 +198,6 @@ equation~\ref{eq-sto-terms}:
 \begin{eqnarray*}
   &&\text{Fluid compressibility coefficient: }
     \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
-%  &&\text{Specific moisture capacity: }
-%    C_m = \phi \frac{\partial s}{\partial \psi} \\
-% with $\psi$ the pressure head of the soil water: $\psi = h - z$. 
   &&\text{Solid matrix compressibility coefficient: }
     \alpha_c = \frac{\partial \phi}{\partial p}.
 \end{eqnarray*}
@@ -171,14 +207,13 @@ as:
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} =
   \rho s S_s \frac{\partial h}{\partial t} +
-  \rho \frac{\partial \theta}{\partial t},
+  \rho \phi \frac{\partial s}{\partial t},
   \label{eq-sto}
 \end{equation}
 where specific storage is defined as
 \begin{equation}
-  S_s = \rho g \left( \phi \beta_c + \alpha_c \right),
+  S_s = \rho g \left( \phi \beta_c + \alpha_c \right).
 \end{equation}
-and $\theta$ equals the volumetric soil water content: $\theta = \phi s$.
 
 \subsection{Variably Saturated Flow Equation}
 Putting the results from the previous sections together,
@@ -190,9 +225,9 @@ variably saturated flow:
   V
   \left(
     s S_s \frac{\partial h}{\partial t} + 
-    \frac{\partial \theta}{\partial t}
+    \phi \frac{\partial s}{\partial t}
   \right) -
-  \sum_{\alpha=1}^{m} \overline{k_r K}
+  \sum_{\alpha=1}^{m} \overline{k_r K_{\textrm{sat}}}
   \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
   \Gamma V = 0.
   \label{eq-unsat-flow}
@@ -203,7 +238,7 @@ with (repeated here for convenience):
   s &=& \text{water saturation} \\
   S_s &=& \text{specific storage} \\
   h &=& \text{hydraulic head} \\
-  \theta &=& \text{volumetric soil water content} \\
+  \phi &=& \text{porosity} \\
   \overline{k_r} &=& \text{effective relative permeability} \\
   \overline{K} &=& \text{effective hydraulic conductivity} \\
   (\partial h/\partial n)_\alpha &=& \text{head gradient normal to face $\alpha$} \\
@@ -212,9 +247,17 @@ with (repeated here for convenience):
 \end{eqnarray*}
 
 Note that as the medium approaches full saturation, the derivative
-$\partial \theta/ \partial t$ vanishes and $k_r$ becomes equal to 1.
+$\partial s/ \partial t$ vanishes and $k_r$ becomes equal to 1.
 In that case, the above expression converges smoothly to the saturated
-groundwater flow equation used in MODFLOW~6. It is this concept of
+groundwater flow equation used in MODFLOW~6:
+\begin{equation}
+  V S_s \frac{\partial h}{\partial t} -
+  \sum_{\alpha=1}^{m} \overline{K_{\textrm{sat}}}
+  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
+  \Gamma V = 0.
+  \label{eq-sat-flow}
+\end{equation}
+It is this concept of
 continuity that is used to integrate the variably saturated flow 
 mechanism into the existing flow formulation.
 
@@ -384,108 +427,37 @@ contributions to the terms in this equation.
 \subsubsection*{Relative Hydraulic Conductivity}
 \subsection{Temporal Discretization and Storage}
 For transient simulations, the change in storage is given by
-equation~\ref{eq-sto}. With the presence of both $h$ and $\theta$,
+equation~\ref{eq-sto}. With the presence of both $h$ and $s$,
 this expression is known as the mixed-form representation
 of Richards' equation. It has the advantage of being mass
-conservative while still allowing for a solution in terms
-of hydraulic head. To discretize the equation and solve
-it in terms of a single dependent variable $h$, the so called 
-modified Picard approximation from \cite{celia-1990} is used.
+conservative and the Newton-Raphson linearization in this work
+starts from this expression. The discretized storage relation
+for use with the Picard iteration method in MODFLOW~6 will be
+derived below. It requires care when discretizing and replacing 
+the dependence on the unknown variable $s$ with a dependence
+on $h$ without violating the principle of mass conservation.
+Two different approaches have been used: a chord slope method
+\cite{?} and what is generally known as the modified Picard
+approximation \cite{celia-1990}.
+
+\subsubsection*{Chord Slope Method}
+This section will follow our Fort Lauderdale results.
 
 \subsubsection*{Modified Picard Scheme}
-The time derivative of the water content is discretized
-with a backward Euler formulation as:
-\begin{equation}
-  \frac{\partial \theta}{\partial t} \cong
-  \frac{\theta^{i,(k)} - \theta^{i-1}}{\Delta t},
-  \label{eq-dtheta-dt}
-\end{equation}
-and similarly for hydraulic head:
-\begin{equation}
-  \frac{\partial h}{\partial t} \cong
-  \frac{h^{i,(k)} - h^{i-1}}{\Delta t},
-\end{equation}
-where the superscript $i$ labels the discrete time level,
-$k$ the Picard iteration level, and the time interval
-$\Delta t = t^{i} - t^{i-1}$. The discretized expression 
-for the change in total storage on a cell $n$ over an 
-interval $\Delta t$ then becomes:
-\begin{equation}
-  Q_{n,\Sigma} =
-  V_n \bar{s}_n S_{s,n}
-  \frac{h_n^{i,(k)} - h_n^{i-1}}{\Delta t} +
-  V_n \frac{\theta_n^{i,(k)} - \theta_n^{i-1}}{\Delta t},
-  \label{eq-sto-discrete}
-\end{equation}
-with $\bar{s}_n$ an average value for the saturation in
-cell $n$ over the interval $\Delta t$. Using a Taylor series 
-expansion for $\theta$ with respect to hydraulic head:
-\begin{equation}
-  \theta^{i,(k)} = \theta^{i,(k-1)} + 
-  \left. \frac{\partial \theta}{\partial h} \right|^{i,(k-1)}
-  \left( h^{i,(k)} - h^{i,(k-1)} \right) + \mathcal{O} (\delta^2),
-\end{equation}
-and neglecting $\mathcal{O}(\delta^2)$ containing terms of second
-order and higher, the dependence of the time derivative on $\theta^i$
-at the new iteration level $k$ can be replaced by a dependence on
-hydraulic head $h^i$. The discretized expression for the change in
-total storage on a cell $n$ over an interval $\Delta t$ then becomes:
-\begin{equation}
-  \begin{split}
-    Q_{n,\Sigma} =
-    V_n \bar{s}_n S_{s,n}
-    \frac{h_n^{i,(k)} - h_n^{i-1}}{\Delta t} +
-    V_n \frac{C_n^{i,(k-1)}(h_n^{i,(k)} - h_n^{i,(k-1)})}{\Delta t} + \\
-    V_n \frac{\theta_n^{i,(k-1)} - \theta_n^{i-1}}{\Delta t}  
-  \end{split}
-  \label{eq-sto-discrete-mod}
-\end{equation}
-with $C \equiv \partial \theta /\partial h$ equal to the specific
-moisture capacity.
-
-The analysis in \cite{celia-1990} shows that the last two terms on
-the right of equation~\ref{eq-sto-discrete-mod} satisfy the conservative
-property. The specific storage term in $Q_{n,\Sigma}$, the first term
-on the right, is not included in their discussion though. To guarantee
-perfect mass conservation there also, a suitable treatment of the average
-saturation $\bar{s}_n$ is required. The saturation is a highly nonlinear
-function of $h$ and simply evaluating it at the midpoint
-$h = (h_n^i+h_n^{i-1})/2$ will generally lead to mass balance errors.
-\begin{itemize}
-  \item In MODFLOW 6 we face a similar issue with the saturated fraction $S_F$.
-        There we convolute the term as 
-        $\frac{S_F^i h_n^{i,(k)} - S_F^{i-1} h_n^{i-1}}{\Delta t}$ which
-        we probably can't do here because the moisture capacity term
-        already contains the $\partial/\partial s$ term. It's also not
-        clear yet why this is allowed in MODFLOW 6, although it has
-        the advantage of being mass conservative of course.
-  \item In VSF, the source code shows that $\bar{s} \rightarrow s^{i-1}$
-        has been chosen (see code in vsf1ref1.f:554 and further). Although 
-        likely a small effect, it will not be mass conservative.
-  \item In NWT, multiplying the specific storage term with the saturated fraction
-        is mentioned and a reference to Huyakorn 1986 is made, which is not explicit 
-        about this term. Maybe the reference therein. The NWT source code shows
-        that they have used $\bar{s} \rightarrow s^{i}$ to multiply
-        the specific storage term with (see gwf2upw1.f:677 and further)
-  \item VSD2 has no Picard linearization for the storage term but Newton
-        linearization only.
-\end{itemize}
+This section will be rewritten to illustrate differences and
+overlap with the previously presented chord slope approach.
+The compressibility term will be the same.
 
 \subsubsection*{Newton-Raphson Scheme}
-The terms for the Newton-Raphson formulation, as given in
-equation~\ref{eq-cvfd-nr}, are derived starting from
-equation~\ref{eq-sto-discrete} as:
+The discretized storage in equation~\ref{eq-sto-discrete} is the starting
+point for the Newton-Raphson linearization procedure. The required 
+terms appear in equation~\ref{eq-cvfd-nr} and are given by:
 \begin{equation}
-  Q_{n,\Sigma}^{(k-1)} = 
-  V_n \bar{s}_n^{(k-1)} S_{s,n}
-  \frac{h_n^{i,(k-1)} - h_n^{i-1}}{\Delta t} +
-  V_n \frac{\theta_n^{i,(k-1)} - \theta_n^{i-1}}{\Delta t},
+  Q_{n,\Sigma}^{(k-1)} = tbd
 \end{equation}
 and
 \begin{equation}
-  \left.\frac{\partial Q_{n,\Sigma}}{\partial h_n}\right|^{(k-1)} =
-  \frac{V_n \bar{s}_n^{(k-1)} S_{s,n}}{\Delta t} +
-  \frac{V_n C_n^{i,(k-1)}}{\Delta t}
+  \left.\frac{\partial Q_{n,\Sigma}}{\partial h_n}\right|^{(k-1)} = tbd
 \end{equation}
 
 \subsection{Sources and Sinks}
@@ -509,6 +481,6 @@ ponding (PON), ... The existing packages for ... have been modified .
 \subsection{Example Problems}
 
 \bibliographystyle{plain}
-\bibliography{techref} 
+\bibliography{MODFLOW6References,techref} 
 
 \end{document}
