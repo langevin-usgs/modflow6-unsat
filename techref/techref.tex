@@ -82,12 +82,18 @@ The fluid flux $\mathbf{q}$ is given by Darcy's law for unsaturated flow:
 where the permeability of the medium $\mathbf{k}$ depends on its saturation $s$,
 $\mu$ is the dynamic viscosity, $p$ the pressure of the fluid, and $g$ the
 gravitational acceleration. For constant density and ignoring the temperature
-dependence of viscosity, this can be writtten in terms of piezometric head as
+dependence of viscosity, this can be writtten in terms of hydraulic head
+$h$ as
 \begin{equation}
   \mathbf{q} = - \mathbf{K}(s) \cdot \nabla h,
   \label{eq-unsat-darcy-flux}
 \end{equation}
-with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. 
+with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. The hydraulic
+head equals the sum of the pressure head $h_p$ and the vertical
+coordinate $z$:
+\begin{equation}
+  h = h_p + z.
+\end{equation}
 
 The concept of relative permeability is commonly used to
 state the dependence of the conductivity on saturation. For
@@ -180,16 +186,18 @@ as follows:
     \rho s \frac{\partial \phi}{\partial h}
   \right]
   \frac{\partial h}{\partial t} +  
-  \rho \phi \frac{\partial s}{\partial t},
+  \rho \phi \frac{\partial s}{\partial t}.
   \label{eq-sto-terms}
 \end{equation}
-with between brackets two distinct terms contributing to the water
+Between brackets are two distinct terms contributing to the water
 added to or released from storage due to changes of the hydraulic
-head: the fluid compressibility term that accounts for changes in the
-fluid density $\rho$ and the (elastic) compression of the solid matrix
-given by the change in the porosity of the medium $\phi$. The last
-term on the right acounts holds the change in soil saturation, which
-is now considered an explicit function of hydraulic head: $s = s(h)$.
+head: the fluid compressibility term to account for changes in the
+fluid density $\rho$ and a term to represent the (elastic)
+compression of the solid matrix given by the change in the porosity
+of the medium $\phi$. The last term on the right acounts holds the
+change in soil saturation, which is a function of pressure head $h_p$, 
+or, in this case where the $z$ coordinate is fixed, of hydraulic 
+head: $s = s(h)$.
 
 For any particular type of soil or geologic formation, these variables
 are assumed to be a function of pressure only. The following definitions
@@ -207,12 +215,13 @@ as:
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} =
   \rho s S_s \frac{\partial h}{\partial t} +
-  \rho \phi \frac{\partial s}{\partial t},
+  \rho \phi \frac{\partial s}{\partial t}.
   \label{eq-sto}
 \end{equation}
-where specific storage is defined as
+The specific storage in this equation is defined as
 \begin{equation}
   S_s = \rho g \left( \phi \beta_c + \alpha_c \right).
+  \label{eq-spec-sto}
 \end{equation}
 
 \subsection{Variably Saturated Flow Equation}
@@ -427,30 +436,84 @@ contributions to the terms in this equation.
 \subsubsection*{Relative Hydraulic Conductivity}
 \subsection{Temporal Discretization and Storage}
 For transient simulations, the change in storage is given by
-equation~\ref{eq-sto}. With the presence of both $h$ and $s$,
-this expression is known as the mixed-form representation
-of Richards' equation. It has the advantage of being mass
-conservative and the Newton-Raphson linearization in this work
-starts from this expression. The discretized storage relation
-for use with the Picard iteration method in MODFLOW~6 will be
-derived below. It requires care when discretizing and replacing 
-the dependence on the unknown variable $s$ with a dependence
-on $h$ without violating the principle of mass conservation.
-Two different approaches have been used: a chord slope method
-\cite{?} and what is generally known as the modified Picard
-approximation \cite{celia-1990}.
+equation~\ref{eq-sto}. Because of the presence of both $h$ and
+$s$ as unknowns, this expression is known as the mixed-form
+representation of Richards' equation. To proceed with the
+numerical solution, a discretized representation of this
+term is required. A great deal of research has been concerned
+with how to best discretize the storage term such that it maintains
+the mass conservation that is inherent to the equation in
+the continuous domain. Applying the chain rule of differentiation
+to convert the time derivative of saturation to hydraulic head,
+i.e., making the substition:
+\begin{equation}
+  \frac{\partial s}{\partial t} \rightarrow
+  \frac{\partial s}{\partial h} 
+  \frac{\partial h}{\partial t},
+\end{equation}
+will generally lead to mass balance errors in case the analytical
+(or tangent) derivative for $\partial s/\partial h$ is used. 
+A more detailed discussion of the subject can be found in
+\cite{rathfelder-1994} and references therein.
 
-\subsubsection*{Chord Slope Method}
-This section will follow our Fort Lauderdale results.
+Instead of applying the product rule in the continuous domain
+and working with the expression on the right-hand side of 
+equation~\ref{eq-sto}, the discrete difference is used
+as a starting point instead:
+\begin{equation}
+  \Delta \left ( \rho s \phi \right ) \equiv
+  \left ( \rho s \phi \right )^{i} - 
+  \left ( \rho s \phi \right )^{i-1} =
+  \left ( \rho \phi \right )^{i} s^{i} - 
+  \left ( \rho \phi \right )^{i-1} s^{i-1},
+  \label{eq-delta_sto}
+\end{equation}
+where $i$ and $i-1$ label the time levels at which terms
+are evaluated and the time interval $\Delta t$ over which the 
+change is determined, is given as
+\begin{equation}
+  \Delta t = t^i - t^{i-1}
+\end{equation}
+Respecting equation~\ref{eq-delta_sto} is clearly necessary to conserve
+mass, but not sufficient. The evaluation of the individual terms
+as so called state functions is essential and deserves particular
+attention when converting the dependent variable to head.
 
-\subsubsection*{Modified Picard Scheme}
-This section will be rewritten to illustrate differences and
-overlap with the previously presented chord slope approach.
-The compressibility term will be the same.
+\subsubsection*{Specific Storage}
+The conversion of $(\rho\phi)^i$ into an expression that depends
+on $h^i$ starts with the approximating relation:
+\begin{equation}
+  (\rho\phi)^i =
+  (\rho\phi)^{i-1} + \frac{\Delta (\rho\phi)}{\Delta h} \Delta h \approx
+  (\rho\phi)^{i-1} + \rho_\textrm{o} S_s \Delta h,
+\end{equation}
+with $\rho_{\textrm{o}}$ a constant value for the density
+\footnote{@AMP: I feel we need to go over our work carefully to
+determine where and how we assume densities to be constant}
+and $S_s$, the specific storage, assumed to be constant over
+the discretized volume too. Substituting this in
+equation~\ref{eq-delta_sto} leads to:
+\begin{equation}
+  \Delta \left ( \rho s \phi \right ) =
+  (\rho \phi)^{i-1}\Delta s +
+  \rho_{\textrm{o}} S_s s^{i,(k-1)} \Delta h.
+\end{equation}
+where the second term on the right-hand side is associated with
+specific storage and has been linearized by evaluating the saturation
+at the previous iteration level $k-1$. To convert the term containing $\Delta s$, two different approaches are available and worked out 
+in detail below: a chord slope method and what is generally known as
+the modified Picard method \cite{celia-1990}.
+
+\subsubsection*{Unsaturated Storage: Chord Slope Method}
+This section will contain our Fort Lauderdale results.
+
+\subsubsection*{Unsaturated Storage: Modified Picard Scheme}
+This section will show the Celia way of approximating $\Delta s$.
+The compressibility term (specific storage) will be the same.
 
 \subsubsection*{Newton-Raphson Scheme}
-The discretized storage in equation~\ref{eq-sto-discrete} is the starting
-point for the Newton-Raphson linearization procedure. The required 
+The discretized storage in equation~\ref{eq-tbd} is the starting
+point for the Newton-Raphson linearization procedure. The required
 terms appear in equation~\ref{eq-cvfd-nr} and are given by:
 \begin{equation}
   Q_{n,\Sigma}^{(k-1)} = tbd
@@ -479,6 +542,13 @@ ponding (PON), ... The existing packages for ... have been modified .
 \section{Model Verification}
 \subsection{Analytical Results}
 \subsection{Example Problems}
+
+\appendix
+\section{Detailed analysis of the storage formulation}
+Maybe we can discuss here how the chord slope and the modified
+Picard method are related. Similarly, explain the relation
+with the Newton-Raphson approach. Following our Ft. Lauderdale
+discussions.
 
 \bibliographystyle{plain}
 \bibliography{MODFLOW6References,techref} 
