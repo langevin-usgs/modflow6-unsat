@@ -472,37 +472,76 @@ where $i$ and $i-1$ label the time levels at which terms
 are evaluated and the time interval $\Delta t$ over which the 
 change is determined, is given as
 \begin{equation}
-  \Delta t = t^i - t^{i-1}
+  \Delta t = t^i - t^{i-1}.
 \end{equation}
 Respecting equation~\ref{eq-delta_sto} is clearly necessary to conserve
 mass, but not sufficient. The evaluation of the individual terms
 as so called state functions is essential and deserves particular
 attention when converting the dependent variable to head.
 
+Following the existing procecure in MODFLOW 6 for confined and
+unconfined groundwater storage, the general equation for storage
+contributions to the variably saturated flow equation is:
+\begin{equation}
+  Q_{\Sigma} = Q_{\Delta s} + Q_{Ss},
+\end{equation}
+where $Q_{Ss}$ is the volumetric flow rate associated with specific
+storage and $Q_{\Delta s}$ the volumetric flow rate resulting from
+changes in the water saturation: the unsaturated storage\footnote{
+  I don't think this is a correct term,
+  but for now let's work with it
+}.
+
 \subsubsection*{Specific Storage}
 The conversion of $(\rho\phi)^i$ into an expression that depends
-on $h^i$ starts with the approximating relation:
+on $h^i$, the hydraulic head at the new time level, starts with 
+the approximating relation:
 \begin{equation}
   (\rho\phi)^i =
   (\rho\phi)^{i-1} + \frac{\Delta (\rho\phi)}{\Delta h} \Delta h \approx
   (\rho\phi)^{i-1} + \rho_\textrm{o} S_s \Delta h,
+  \label{eq-rhophi-i}
 \end{equation}
 with $\rho_{\textrm{o}}$ a constant value for the density
 \footnote{@AMP: I feel we need to go over our work carefully to
 determine where and how we assume densities to be constant}
 and $S_s$, the specific storage, assumed to be constant over
-the discretized volume too. Substituting this in
-equation~\ref{eq-delta_sto} leads to:
+the discretized volume too. Substituting in equation~\ref{eq-delta_sto}
+leads to:
 \begin{equation}
   \Delta \left ( \rho s \phi \right ) =
   (\rho \phi)^{i-1}\Delta s +
-  \rho_{\textrm{o}} S_s s^{i,(k-1)} \Delta h.
+  \rho_{\textrm{o}} S_s s^i \Delta h.
+  \label{eq-delta_sto_2}
 \end{equation}
-where the second term on the right-hand side is associated with
-specific storage and has been linearized by evaluating the saturation
-at the previous iteration level $k-1$. To convert the term containing $\Delta s$, two different approaches are available and worked out 
-in detail below: a chord slope method and what is generally known as
-the modified Picard method \cite{celia-1990}.
+After using a backward Euler scheme to approximate the time
+derivative, the discretized volumetric flow rate from specific
+storage changes for cell $n$ equals:
+\begin{equation}
+  Q_{n,Ss} = \rho_{\textrm{o}} S_s s_n^i
+  \frac{h_n^i - h_n^{i-1}}{\Delta t}.
+\end{equation}
+In the iterative scheme the current iteration is labeled
+by $k$, the expression is then linearized by evaluating
+the saturation at the previous iteration level, with the
+replacement $s_n^{i,(k)} \rightarrow s_n^{i,(k-1)}$:
+\begin{equation}
+  Q_{n,Ss} = \rho_{\textrm{o}} S_s s_n^{i,(k-1)} 
+  \frac{h_n^{i,(k)} - h_n^{i-1}}{\Delta t}.
+\end{equation}
+Note that alternatively, equation~\ref{eq-rhophi-i} could have
+been used to express $(\rho\phi)^{i-1}$ explicitly in terms 
+of $(\rho\phi)^i$ and substitute in equation~\ref{eq-delta_sto}. 
+In that case, $Q_{n,Ss}$ would end up being proportional to 
+$s^{i-1}$ instead.\footnote{The implications of which are still
+to be sorted out, maybe something for the appendix}
+
+To convert the term containing $\Delta s$ in 
+equation~\ref{eq-delta_sto_2}, two different 
+approaches are available and worked out below: 
+a chord slope method discussed in \cite{rathfelder-1994}
+and what is generally known as the modified Picard method
+\cite{celia-1990}.
 
 \subsubsection*{Unsaturated Storage: Chord Slope Method}
 This section will contain our Fort Lauderdale results.
