@@ -370,7 +370,7 @@ for a cell $n$ using the component notation as
 \end{equation}
 The coefficients of the Jacobian matrix $\mathbf{J}$ are given by
 \begin{equation}
-  J_{n,k} = \frac{\partial r_n}{\partial h_k}.
+  J_{n,r} = \frac{\partial r_n}{\partial h_r}.
   \label{eq-jacobian}
 \end{equation}
 The strategy is to find the change in head $\Delta\mathbf{h}$ that
@@ -434,14 +434,16 @@ contributions to the terms in this equation.
 \subsection{Intercell Averaging of Conductance Terms}\label{sec-cond-avg}
 \subsubsection*{Saturated Hydraulic Conductivity}
 \subsubsection*{Relative Hydraulic Conductivity}
+
 \subsection{Temporal Discretization and Storage}
 For transient simulations, the change in storage is given by
 equation~\ref{eq-sto}. Because of the presence of both $h$ and
 $s$ as unknowns, this expression is known as the mixed-form
 representation of Richards' equation. To proceed with the
-numerical solution, a discretized representation of this
-term is required. A great deal of research has been concerned
-with how to best discretize the storage term such that it maintains
+numerical solution, the time variable is discretized and a
+discrete representation of this term is required. 
+A great deal of research has been concerned with how to 
+best discretize the storage term such that it maintains
 the mass conservation that is inherent to the equation in
 the continuous domain. Applying the chain rule of differentiation
 to convert the time derivative of saturation to hydraulic head,
@@ -450,6 +452,7 @@ i.e., making the substition:
   \frac{\partial s}{\partial t} \rightarrow
   \frac{\partial s}{\partial h} 
   \frac{\partial h}{\partial t},
+  \label{eq-sat-chain-rule}
 \end{equation}
 will generally lead to mass balance errors in case the analytical
 (or tangent) derivative for $\partial s/\partial h$ is used. 
@@ -487,7 +490,8 @@ contributions to the variably saturated flow equation is:
 \end{equation}
 where $Q_{Ss}$ is the volumetric flow rate associated with specific
 storage and $Q_{\Delta s}$ the volumetric flow rate resulting from
-changes in the water saturation: the unsaturated storage\footnote{
+changes in the water saturation, referred to in this document
+as unsaturated storage\footnote{
   I don't think this is a correct term,
   but for now let's work with it
 }.
@@ -502,9 +506,9 @@ the approximating relation:
   (\rho\phi)^{i-1} + \rho_\textrm{o} S_s \Delta h,
   \label{eq-rhophi-i}
 \end{equation}
-with $\rho_{\textrm{o}}$ a constant value for the density
-\footnote{@AMP: I feel we need to go over our work carefully to
-determine where and how we assume densities to be constant}
+with $\rho_{\textrm{o}}$ a constant value for the density\footnote{@AMP: 
+I feel we need to go over our work carefully to remind ourselves
+where and how we assume densities to be constant for now}
 and $S_s$, the specific storage, assumed to be constant over
 the discretized volume too. Substituting in equation~\ref{eq-delta_sto}
 leads to:
@@ -544,23 +548,119 @@ and what is generally known as the modified Picard method
 \cite{celia-1990}.
 
 \subsubsection*{Unsaturated Storage: Chord Slope Method}
-This section will contain our Fort Lauderdale results.
+The conversion of $\Delta s$ in equation~\ref{eq-delta_sto_2} to a
+quantity that depends on head, requires some care. A straightforward
+discretization of the chain rule expansion, shown in 
+equation~\ref{eq-sat-chain-rule}, such that
+\begin{equation}
+  \Delta s = \left.\frac{\partial s}
+             {\partial h}\right|_{h^{i-\frac{1}{2}}} \Delta h,
+\end{equation}
+leaves the question open on what intermediate time $t^{i-\frac{1}{2}}$
+(or for what intermediate head value $h^{i-\frac{1}{2}}$)
+the derivative should be evaluated. Since in practice this derivative
+is highly non-linear, the resulting expression will generally 
+lead to mass balance errors.
+
+The approach used here is to move the chain rule to the
+discrete domain, starting with the trivial equality:
+\begin{equation}
+  \Delta s = \left( \frac{\Delta s}{\Delta h} \right) \Delta h
+           = \left( \frac{s^i - s^{i-1}}{h^i - h^{i-1}} \right) 
+             \left( h^i - h^{i-1} \right).
+\end{equation}
+After division by $\Delta t$ and a linearization that follows
+from evaluating the quotient at the previous iteration level,
+the discrete unsaturated storage term is given by:
+\begin{equation}
+  Q_{n,\Delta s} = (\rho \phi)^{i-1}
+  \left( \frac{s_n^{i,(k-1)} - s_n^{i-1}}
+              {h_n^{i,(k-1)} - h_n^{i-1}} \right)
+  \frac{h_n^{i,(k)} - h_n^{i-1}}{\Delta t}.
+\end{equation}
+When convergence of the iterative scheme is achieved, or, put
+differently, when $h^{i,(k)} \approx h^{i,(k-1)}$,
+this relation turns into a state function of saturation
+and will therefore be mass conversative.
 
 \subsubsection*{Unsaturated Storage: Modified Picard Scheme}
-This section will show the Celia way of approximating $\Delta s$.
-The compressibility term (specific storage) will be the same.
+An common method to introduce hydraulic head as the dependent
+variable for the term containing $\Delta s$ in 
+equation~\ref{eq-delta_sto_2}, is known as the modified Picard
+scheme \cite{celia-1990}. The saturation at the new time
+level is approximated by a truncated Taylor series as:
+\begin{equation}
+  s^i \approx s^{i,(k-1)} + 
+    C^{i,(k-1)}
+    \left( h^{i,(k)} - h^{i,(k-1)} \right).
+\end{equation}
+The moisture capacity function is defined in this equation by:
+\begin{equation}
+  C^{i,(k-1)} = 
+    \left. \frac{\partial s}{\partial h}\right|_{h^{i,(k-1)}},
+\end{equation}
+which in practice will be a different function depending on
+the type of soil in a cell. With this approximation, the volumetric
+flow rate for cell $n$ associated with changes in saturation $s_n$ is
+given by:
+\begin{equation}
+  Q_{n,\Delta s} = (\rho \phi)^{i-1}
+    \left( 
+      \frac{s_n^{i,(k-1)} - s_n^{i-1}}{\Delta t} +
+      C_n^{i,(k-1)}
+      \frac{h_n^{i,(k)} - h_n^{i,(k-1)}}{\Delta t}
+    \right).
+\end{equation}
+When the method converges, the term proportional to the moisture
+capacity function vanishes and the rate becomes identical to the
+one from the chord slope method above, thereby satisfying the mass 
+conservative property as intended.
 
-\subsubsection*{Newton-Raphson Scheme}
-The discretized storage in equation~\ref{eq-tbd} is the starting
-point for the Newton-Raphson linearization procedure. The required
-terms appear in equation~\ref{eq-cvfd-nr} and are given by:
+\subsubsection*{Total Storage: Newton-Raphson Scheme}
+The discrete change in total storage in equation~\ref{eq-delta_sto_2}
+is the starting point for the Newton-Raphson linearization procedure. 
+Dividing both sides by $\Delta t$ gives for the volumetric flow
+rate associated with the total storage:
 \begin{equation}
-  Q_{n,\Sigma}^{(k-1)} = tbd
+  Q_\Sigma = \frac{\Delta (\rho s \phi)}{\Delta t} = 
+    (\rho \phi)^{i-1}\frac{s^i - s^{i-1}}{\Delta t} +
+    \rho_{\textrm{o}} S_s s^i \frac{h^i - h^{i-1}}{\Delta t}.
+    \label{eq-discrete-rate}
 \end{equation}
-and
+The terms associated with the residual as written in the expansion
+in equation~\ref{eq-cvfd-nr}, for a cell $n$, are now given by:
 \begin{equation}
-  \left.\frac{\partial Q_{n,\Sigma}}{\partial h_n}\right|^{(k-1)} = tbd
+  Q_{n,\Sigma}^{(k-1)} =
+  (\rho \phi)^{i-1}\frac{s_n^{i,(k-1)} - s_n^{i-1}}{\Delta t} +
+  \rho_{\textrm{o}} S_s s_n^{i,(k-1)}
+  \frac{h_n^{i,(k-1)} - h_n^{i-1}}{\Delta t},
+  \label{eq-newton-storage-residual}
 \end{equation}
+The Jacobian terms follow directly from taking the derivative
+of equation~\ref{eq-discrete-rate} with respect to $h$:
+\begin{equation}
+  \frac{\partial Q_{\Sigma}}{\partial h} =
+  \frac{(\rho\phi)^{i-1}}{\Delta t} 
+  \frac{\partial s}{\partial h} +
+  \frac{\rho_{\textrm{o}} S_s}{\Delta t}
+  \left( s^i + h^i \frac{\partial s}{\partial h} \right).
+\end{equation}
+Finally, this needs to be determined at the previous iteration level
+$k-1$, which means evaluating at $h = h^{i,(k-1)}$. For an arbitrary 
+cell $n$ this leads to the following equation:
+\begin{equation}
+  \left( \frac{\partial Q_{n,\Sigma}}{\partial h} \right)^{(k-1)} =
+  \frac{(\rho\phi)^{i-1}}{\Delta t} C_n^{i,(k-1)} +
+  \frac{\rho_{\textrm{o}} S_s}{\Delta t}
+  \left( 
+    s_n^{i,(k-1)} + h_n^{i,(k-1)} C_n^{i,(k-1)}
+  \right).
+  \label{eq-newton-storage-jacobian}
+\end{equation}
+Equations~\ref{eq-newton-storage-residual} and
+\ref{eq-newton-storage-jacobian} are used to formulate the system of
+equations for the variably saturated flow process in case of
+a simulation with the Newton-Raphson linearization enabled.
 
 \subsection{Sources and Sinks}
 \subsection{Initial and Boundary Conditions}
