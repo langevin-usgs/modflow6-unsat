@@ -89,10 +89,10 @@ $h$ as
   \label{eq-unsat-darcy-flux}
 \end{equation}
 with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. The hydraulic
-head equals the sum of the pressure head $h_p$ and the vertical
+head equals the sum of the pressure head $\psi$ and the vertical
 coordinate $z$:
 \begin{equation}
-  h = h_p + z.
+  h = \psi + z.
 \end{equation}
 
 The concept of relative permeability is commonly used to
@@ -195,7 +195,7 @@ head: the fluid compressibility term to account for changes in the
 fluid density $\rho$ and a term to represent the (elastic)
 compression of the solid matrix given by the change in the porosity
 of the medium $\phi$. The last term on the right accounts for the
-change in soil saturation, which is a function of pressure head $h_p$, 
+change in soil saturation, which is a function of pressure head $\psi$, 
 or, in this case where the $z$ coordinate is fixed, of hydraulic 
 head: $s = s(h)$.
 
@@ -247,7 +247,7 @@ with (repeated here for convenience):
   s &=& \text{water saturation} \\
   S_s &=& \text{specific storage} \\
   h &=& \text{hydraulic head} \\
-  \phi &=& \text{porosity} \\
+  \phi &=& \text{porosity}, \\
   \overline{k_r} &=& \text{effective relative permeability} \\
   \overline{K} &=& \text{effective hydraulic conductivity} \\
   (\partial h/\partial n)_\alpha &=& \text{head gradient normal to face $\alpha$} \\
@@ -266,19 +266,107 @@ groundwater flow equation used in MODFLOW~6:
   \Gamma V = 0.
   \label{eq-sat-flow}
 \end{equation}
-It is this concept of
-continuity that is used to integrate the variably saturated flow 
-mechanism into the existing flow formulation.
+It is this concept of continuity that is used to integrate the 
+variably saturated flow mechanism into the existing flow formulation.
 
 
 \subsection{Initial and Boundary Conditions}\label{sec-boundary-conditions}
 
 
 \subsection{Analytical Functions for Soil Properties}
-\subsubsection*{Water Retention Curve}
-\subsubsection*{Specific Moisture Capacity}
-\subsubsection*{Relative Hydraulic Conductivity}
-\subsubsection*{Hysteresis}
+\subsubsection{Water Retention Curve}
+The water retention curve, also known as the soil moisture
+characteristic, describes the relation between the degree of saturation
+and the pressure potential of the water in the soil.  As the capillary
+pressure becomes larger, and the pressure potential becomes increasingly
+negative, the water saturation reduces up to a residual moisture content.
+In what follows the water rentention curve will be given for a number of
+models through an equation for the effective water saturation $s_e$, 
+sometimes called a reduced water saturation, which is defined as:
+\begin{equation}
+  s_e = \frac{s - s_r}{1 - s_r}
+\end{equation}
+where the fitting parameters $s_r$ is the irreducible (or residual) 
+water saturation ($0 < s_r < 1$).
+
+These characteristic curves are generally determined from experiment 
+by fitting a parametrized algebraic function to the measured data. 
+A benefit of using such a function is that its derivative can be used 
+to define the specific moisture capacity. Additionally, integration 
+leads to a relation between relative hydraulic conductivity and pressure potential \cite{???}. These three analytical functions are required for 
+the numerical solution of equation~\ref{eq-unsat-flow}. 
+Figure~\ref{fig-unknown} shows experimental data and their fits
+for different types of soil.
+
+\subparagraph{Brooks-Corey}
+The Brooks-Corey model \cite{brookscorey1966} gives the soil
+moisture characteristic in terms of effective saturation $s_e$ as:
+\begin{equation}
+  s_e =
+  \begin{cases}
+    \begin{aligned}
+      \left( \frac{\psi_b}{\psi} \right)^{\lambda} & \quad & \psi < 0    \\
+      1                                            & \quad & \psi \geq 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-seff-BrooksCorey}
+\end{equation}
+with the parameters
+\begin{eqnarray*}
+  \psi_b  &=& \text{bubbling or air entry pressure potential ($\psi_b < 0$)}\\
+  \lambda &=& \text{Brooks-Corey exponent ($\lambda>0$)}
+\end{eqnarray*}
+The parameter $\psi_b$ is equal to the pressure potential required 
+to desaturate the largest pores in the medium. The exponent $\lambda$
+is the pore size distribution index. Both parameters are characteristics
+of the medium.
+
+\subparagraph{Haverkamp}
+The following soil moisture characteristic has been used in a study by
+Haverkamp et al. \cite{haverkampetal-1977}:
+\begin{equation}
+  s_e =
+  \begin{cases}
+    \begin{aligned}
+      \frac{1}
+      {
+        1 + \left( -\alpha\psi \right)^{n}
+      } \quad & \psi < 0    \\
+      1 \quad & \psi \geq 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-seff-Haverkamp}
+\end{equation}
+where the parameters $\alpha$ and $n$ are both positive. 
+When comparing this to Brooks-Corey for large values of $-\psi$,
+it becomes clear that $\alpha$ is inversely related to the air entry 
+pressure potential $\psi_b$.
+
+\subparagraph{Van Genuchten}
+The moisture retention function by Van Genuchten \cite{vangenuchten-1980}
+is defined as
+\begin{equation}
+  s_e =
+  \begin{cases}
+    \begin{aligned}
+      \frac{1}
+      {
+        \left( 1 + \left( -\alpha\psi \right)^{n}
+        \right)^{m}
+      } \quad & \psi < 0    \\
+      1 \quad & \psi \geq 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-seff-vanGenuchten}
+\end{equation}
+where $\alpha$, $m$, and $n$ are the Van Genuchten fitting parameters, 
+all positive and with $m = 1 - 1/n$. For large
+values of $n$ (when $m \rightarrow 1$) the function will behave similarly
+to the expression given by Haverkamp above.
+
+\subsubsection{Specific Moisture Capacity}
+\subsubsection{Relative Permeability}
+\subsubsection{Hysteresis}
 
 \section{Numerical Solution}
 Equation~\ref{eq-unsat-flow}, together with the boundary conditions as
