@@ -2,6 +2,7 @@
 \author{Authors from Deltares and USGS}
 
 \usepackage{amsmath}
+\usepackage{hyperref}
 
 \begin{document}
 
@@ -95,14 +96,15 @@ coordinate $z$:
   h = \psi + z.
 \end{equation}
 
-The concept of relative permeability is commonly used to
-state the dependence of the conductivity on saturation. For
-example, for an isotropic porous medium:
+The concept of relative hydraulic conductivity\footnote{More fundamental would
+  be relative permeability, but we are not planning on using that here, do we?}
+is commonly used to capture the dependence of the conductivity on saturation. 
+For example, in an isotropic porous medium:
 \begin{equation}
   \mathbf{q} = - k_\textrm{r}(s) K_{\textrm{sat}} \nabla h,
 \end{equation}
 where $K_\textrm{sat}$ is the hydraulic conductivity tensor at full saturation,
-the relative permeability is given by:
+the relative hydraulic conductivity is given by:
 \begin{equation}
   k_\textrm{r} = \frac{K(s)}{K_{\textrm{sat}}}.
 \end{equation}
@@ -123,7 +125,7 @@ of the conductivity tensor are aligned with the coordinate axes:
   \end{bmatrix},
 \end{equation}
 although this poses the challenge to determine not one but three, in
-this case direction dependent, relative permeability functions. In case the 
+this case direction dependent, relative hydraulic conductivity functions. In case the 
 medium is anisotropic and the axes are not aligned, the conductivity tensor
 follows from the previous expression by a rotation of coordinates:
 \begin{equation}
@@ -137,14 +139,14 @@ to treat variably saturated flow in three-dimensional anisotropic media,
 consistent with the XT3D capability \cite{modflow6xt3d} available in
 MODFLOW 6 for saturated groundwater flow. For practical reasons, such
 as limiting the challenge of calibrating the conductivities in a model,
-it is assumed that relative permeability is isotropic. This
+it is assumed that relative hydraulic conductivity is isotropic. This
 implies that equation~\ref{eq-unsat-darcy-flux} can be written as
 \begin{equation}
   \mathbf{q} = - k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
 \end{equation}
-where $k_r$ is a scalar function of saturation. Although this approximation
+where $k_r$ is a scalar function of saturation. This approximation
 has been used in many simulation codes 
-(e.g., \cite{vs2d,modflowvsf,vosssutra,panday-surfact}), it has been
+(e.g., \cite{vs2d,modflowvsf,vosssutra,panday-surfact}), but it has been
 pointed out that the effect of saturation generally depends on 
 direction \cite{bear-1987}.
 
@@ -248,7 +250,7 @@ with (repeated here for convenience):
   S_s &=& \text{specific storage} \\
   h &=& \text{hydraulic head} \\
   \phi &=& \text{porosity}, \\
-  \overline{k_r} &=& \text{effective relative permeability} \\
+  \overline{k_r} &=& \text{effective relative hydraulic conductivity} \\
   \overline{K} &=& \text{effective hydraulic conductivity} \\
   (\partial h/\partial n)_\alpha &=& \text{head gradient normal to face $\alpha$} \\
   \sigma_\alpha &=& \text{surface area of face $\alpha$} \\
@@ -302,11 +304,11 @@ for different types of soil.
 The Brooks-Corey model \cite{brookscorey1966} gives the soil
 moisture characteristic in terms of effective saturation $s_e$ as:
 \begin{equation}
-  s_e =
+  s_e(\psi)  =
   \begin{cases}
     \begin{aligned}
-      \left( \frac{\psi_b}{\psi} \right)^{\lambda} & \quad & \psi < 0    \\
-      1                                            & \quad & \psi \geq 0
+      \left( \frac{\psi_b}{\psi} \right)^{\lambda} & \quad & \psi \leq \psi_b \\
+      1                                            & \quad & \psi > \psi_b
     \end{aligned}
   \end{cases}
   \label{eq-seff-BrooksCorey}
@@ -325,14 +327,14 @@ of the medium.
 The following soil moisture characteristic has been used in a study by
 Haverkamp et al. \cite{haverkampetal-1977}:
 \begin{equation}
-  s_e =
+  s_e(\psi)  =
   \begin{cases}
     \begin{aligned}
       \frac{1}
       {
         1 + \left( -\alpha\psi \right)^{n}
-      } \quad & \psi < 0    \\
-      1 \quad & \psi \geq 0
+      } \quad & \psi \leq 0 \\
+      1 \quad & \psi > 0
     \end{aligned}
   \end{cases}
   \label{eq-seff-Haverkamp}
@@ -346,15 +348,15 @@ pressure potential $\psi_b$.
 The moisture retention function by Van Genuchten \cite{vangenuchten-1980}
 is defined as
 \begin{equation}
-  s_e =
+  s_e(\psi) =
   \begin{cases}
     \begin{aligned}
       \frac{1}
       {
         \left( 1 + \left( -\alpha\psi \right)^{n}
         \right)^{m}
-      } \quad & \psi < 0    \\
-      1 \quad & \psi \geq 0
+      } \quad & \psi \leq 0 \\
+      1 \quad & \psi > 0
     \end{aligned}
   \end{cases}
   \label{eq-seff-vanGenuchten}
@@ -365,7 +367,133 @@ values of $n$ (when $m \rightarrow 1$) the function will behave similarly
 to the expression given by Haverkamp above.
 
 \subsubsection{Specific Moisture Capacity}
+The specific moisture capacity function describes the change in water content
+$\theta$ resulting from a unit change in pressure head $\psi$. It is related to the derivative of the water retention curve discussed above:
+\begin{equation}
+  C_m(\psi) = \frac{\partial \theta}{\partial \psi} \approx
+  \phi \frac{\partial s}{\partial \psi}
+\end{equation}
+where it is assumed that changes in $s$ are much larger than changes in $\phi$.
+The moisture capacity will appear as the dominant component of the storage
+coefficient for variably saturated flow, either through the analytical expression
+of $C_m(\psi)$ or by a discrete approximation (chord-slope) of the derivative.
+
+\subparagraph{Brooks-Corey}
+Converting from $s_e$ to $s$ in equation~\ref{eq-seff-BrooksCorey} and then taking the derivative leads to the Brooks-Corey expression for the specific moisture capacity function:
+\begin{equation}
+  C_m(\psi) =
+  \begin{cases}
+    \begin{aligned}
+      - \phi ( 1 - s_r) \frac{\lambda}{\psi_b}
+      \left(\frac{\psi_b}{\psi}\right)^{\lambda + 1} & \quad & \psi \leq \psi_b \\
+      0                                              & \quad & \psi > \psi_b
+    \end{aligned}
+  \end{cases}
+  \label{eq-Cm-BrooksCorey}
+\end{equation}
+Note that this function is discontinuous at $\psi = \psi_b$. Also
+$\psi_b < 0$ which means that $C_m \geq 0$ at all times: saturation is a
+monotonously increasing function of pressure head.
+\subparagraph{Haverkamp}
+When the soil moisture characteristic is represented by the Haverkamp
+parametrization, the following equation is used:
+\begin{equation}
+  C_m(\psi) =
+  \begin{cases}
+    \begin{aligned}
+      \phi ( 1 - s_r)
+      \frac
+      {
+        n \alpha (-\alpha\psi)^{n-1}
+      }
+      {
+        \left( 1 + \left( -\alpha\psi \right)^{n} \right)^2
+      }
+        & \quad & \psi \leq 0 \\
+      0 & \quad & \psi > 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-Cm-Haverkamp}
+\end{equation}
+
+\subparagraph{Van Genuchten}
+\begin{equation}
+  C_m(\psi) =
+  \begin{cases}
+    \begin{aligned}
+      \phi ( 1 - s_r)
+      \frac
+      {
+        m n \alpha (-\alpha\psi)^{n-1}
+      }
+      {
+        \left( 1 + \left( -\alpha\psi \right)^{n} \right)^{m+1}
+      }
+        & \quad & \psi \leq 0 \\
+      0 & \quad & \psi > 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-Cm-vanGenuchten}
+\end{equation}
+
+
 \subsubsection{Relative Permeability}
+\subparagraph{Brooks-Corey}
+\begin{equation}
+  k_r(\psi)  =
+  \begin{cases}
+    \begin{aligned}
+      \left( \frac{\psi_b}{\psi} \right)^{2 + 3\lambda} & \quad & \psi \leq \psi_b \\
+      1                                                 & \quad & \psi > \psi_b
+    \end{aligned}
+  \end{cases}
+  \label{eq-kr-BrooksCorey}
+\end{equation}
+
+\subparagraph{Haverkamp}
+In practice, for the Haverkamp model, the following equation is used to fit
+to the measured hydraulic conductivities at varying saturation:
+\begin{equation}
+  k_r(\psi)  =
+  \begin{cases}
+    \begin{aligned}
+      \frac{1}
+      {
+        1 + \left( -\beta\psi \right)^{k}
+      } \quad & \psi \leq 0 \\
+      1 \quad & \psi > 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-kr-Haverkamp}
+\end{equation}
+Although this is exactly the same type of function as given for the
+soil moisture in equation~\ref{eq-seff-Haverkamp}, the value of the
+coefficients $\beta$ and $k$ are not the same.
+
+\subparagraph{Van Genuchten}
+\begin{equation}
+  k_r(\psi)  =
+  \begin{cases}
+    \begin{aligned}
+      \frac{
+        \left[
+          \left( 1 - (-\alpha \psi)^{n-1} \right) 
+          \left( 1 + (-\alpha \psi)^n \right)^{-m}
+          \right]^2
+      }
+      {
+        \left[ 1 + (-\alpha \psi)^n \right]^{m/2}
+      }
+      
+      \quad   & \psi \leq 0 \\
+      1 \quad & \psi > 0
+    \end{aligned}
+  \end{cases}
+  \label{eq-kr-vanGenuchten}
+\end{equation}
+where $\alpha$, $n$, and $m$ are the Van Genuchten fitting parameters
+introduced in the expression for the soil moisture characteristic
+and $m = 1 - 1/n$ as before.
 \subsubsection{Hysteresis}
 
 \section{Numerical Solution}
@@ -739,16 +867,16 @@ of equation~\ref{eq-discrete-rate} with respect to $h$:
 \end{equation}
 Finally, this needs to be determined at the previous iteration level
 $k-1$, which means evaluating at $h = h^{i,(k-1)}$. For an arbitrary 
-cell $n$ this leads to the following equation\footnote{AMP:
-I think $h_n^{i,(k-1)}$ should be $\left ( h_n^{i,(k-1)} - h_n^{i-1} \right)$
-in equation \ref{eq-newton-storage-jacobian}}:
+cell $n$ this leads to the following equation:
 \begin{equation}
-  \left( \frac{\partial Q_{n,\Sigma}}{\partial h} \right)^{(k-1)} =
-  \frac{(\rho\phi)^{i-1}}{\Delta t} C_n^{i,(k-1)} +
-  \frac{\rho_{\textrm{o}} S_s}{\Delta t}
-  \left( 
-  s_n^{i,(k-1)} + h_n^{i,(k-1)} C_n^{i,(k-1)}
-  \right).
+  \begin{split}
+    \left( \frac{\partial Q_{n,\Sigma}}{\partial h_n} \right)^{(k-1)} = \quad &
+    \frac{(\rho\phi)^{i-1}}{\Delta t} C_n^{i,(k-1)} \\
+    &+ \frac{\rho_{\textrm{o}} S_s}{\Delta t}
+    \left( 
+    s_n^{i,(k-1)} + \left( h_n^{i,(k-1)} - h_n^{i-1} \right) C_n^{i,(k-1)}
+    \right).
+  \end{split}
   \label{eq-newton-storage-jacobian}
 \end{equation}
 Equations~\ref{eq-newton-storage-residual} and
@@ -817,7 +945,7 @@ where
   s^{i,*} \equiv  s^{i,(k-1)} + \left. \frac{\partial s}{\partial h}\right|_{h^{i,(k-1)}}
   \Delta h^{i,(k-1)} .
 \end{equation}
-As one would expect, this is exactly the Jacobian given by equation \ref{eq-newton-storage-jacobian}\footnote{AMP: assuming I'm right about the correction needed in equation \ref{eq-newton-storage-jacobian}; see other footnote}. For Celia's method,
+As one would expect, this is exactly the Jacobian given by equation \ref{eq-newton-storage-jacobian}. For Celia's method,
 \begin{equation}
   J^{est} = (\rho \phi)^{i-1} \left. \frac{\partial s}{\partial h}\right|_{h^{i,(k-1)}} +
   \rho_{\textrm{o}} S_s s^{i,(k-1)} .
