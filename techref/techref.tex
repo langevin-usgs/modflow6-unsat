@@ -3,6 +3,7 @@
 
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{xcolor}
 
 \begin{document}
 
@@ -209,20 +210,21 @@ equation~\ref{eq-sto-terms}:
   &&\text{Fluid compressibility coefficient: }
   \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
   &&\text{Solid matrix compressibility coefficient: }
-  \alpha_c = \frac{\partial \phi}{\partial p}.
+  \alpha_c = {\color{purple}\frac{1}{1 - \phi}} \frac{\partial \phi}{\partial p}.
 \end{eqnarray*}
 Now with the approximation that the density of water depends on
-pressure only, $\rho = \rho(p)$, the change in storage can be written
-as:
+pressure only \footnote{{\color{purple}Not seeing how this works now, will need to review.}
+{\color{blue}I think it is in the spirit of Bear and Cheng, 5.1.31 and 5.1.32}}, 
+$\rho = \rho(p)$, the change in storage can be written as:
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} =
   \rho s S_s \frac{\partial h}{\partial t} +
   \rho \phi \frac{\partial s}{\partial t}.
   \label{eq-sto}
 \end{equation}
-The specific storage in this equation is defined as
+The specific storage \footnote{{\color{purple}It should be noted that the assumptions underlying the specific storage formulation don't necessarily hold in the unsaturated case, but the error from including it is generally small; see, for example, the SUTRA manual.}} in this equation is defined as
 \begin{equation}
-  S_s = \rho g \left( \phi \beta_c + \alpha_c \right).
+  S_s = \rho g {\color{purple}\left[ \phi \beta_c + (1 - \phi) \alpha_c \right]}.
   \label{eq-spec-sto}
 \end{equation}
 
@@ -372,6 +374,7 @@ $\theta$ resulting from a unit change in pressure head $\psi$. It is related to 
 \begin{equation}
   C_m(\psi) = \frac{\partial \theta}{\partial \psi} \approx
   \phi \frac{\partial s}{\partial \psi}
+  \label{eq-C-related-to-WRC}
 \end{equation}
 where it is assumed that changes in $s$ are much larger than changes in $\phi$.
 The moisture capacity will appear as the dominant component of the storage
@@ -813,7 +816,7 @@ level is approximated by a truncated Taylor series as:
   \left( h^{i,(k)} - h^{i,(k-1)} \right).
   \label{eq-celia-taylor}
 \end{equation}
-The moisture capacity function is defined in this equation by:
+The moisture capacity function is defined in this equation by\footnote{{\color{purple}This is different from the function defined in eqn \ref{eq-C-related-to-WRC}.}}:
 \begin{equation}
   C^{i,(k-1)} = 
   \left. \frac{\partial s}{\partial h}\right|_{h^{i,(k-1)}},
@@ -926,7 +929,7 @@ in the unconfined term, and
   \end{split}
   \label{eq-newton-approx-confined}
 \end{equation}
-in the confined term. Celia's method uses equations \ref{eq-celia-taylor} and \ref{eq-celia-moisture-cap-fun}, which together are mathematically equivalent to equation \ref{eq-newton-approx-unconfined}, in the unconfined term and equation \ref{eq-delta_sto_ss_iter} in the confined term. Thus, we see that Celia essentially applies Newton's method to the unconfined term, but not the confined term. The chord-slope method, which uses equations \ref{eq-unconfined-term-chord-slope} and \ref{eq-delta_sto_ss_iter}, obviously does not apply Newton's method to either term. Replacing our chord slope with $\frac{s^{i,(k-1)} - s^{i,(k-2)}}{h^{i,(k-1)} - h^{i,(k-2)}}$ would yield an ``unconfined secant method." Replacing it with the exact derivative evaluated at the previous iterate would yield Celia's ``unconfined Newton's method."
+in the confined term. Celia's method uses equations \ref{eq-celia-taylor} and \ref{eq-celia-moisture-cap-fun}, which together are mathematically equivalent\footnote{{\color{purple}Actually, Celia linearizes $s \phi$, not $s$.}} to equation \ref{eq-newton-approx-unconfined}, in the unconfined term and equation \ref{eq-delta_sto_ss_iter} in the confined term. Thus, we see that Celia essentially applies Newton's method to the unconfined term, but not the confined term. The chord-slope method, which uses equations \ref{eq-unconfined-term-chord-slope} and \ref{eq-delta_sto_ss_iter}, obviously does not apply Newton's method to either term. Replacing our chord slope with $\frac{s^{i,(k-1)} - s^{i,(k-2)}}{h^{i,(k-1)} - h^{i,(k-2)}}$ would yield an ``unconfined secant method." Replacing it with the exact derivative evaluated at the previous iterate would yield Celia's ``unconfined Newton's method."
 
 The total-storage-change update from one iteration to the next can be written as
 \begin{equation}
@@ -958,6 +961,74 @@ For the chord-slope method,
   \rho_{\textrm{o}} S_s s^{i,k-1} .
   \label{eq-jest-chord-slope}
 \end{equation}
+
+{\color{purple}
+\section{Comparison of different formulations of the storage term}
+
+Expansion of the storage term using the product rule gives
+\begin{equation}
+\frac{\partial (\rho s \phi)}{\partial t}
+  = \rho \phi\, \frac{\partial s}{\partial t}
+  + \rho s\, \frac{\partial \phi}{\partial t}
+  + \phi s\, \frac{\partial \rho}{\partial t} .
+\label{eq-sto-expanded}
+\end{equation}
+The three terms on the right-hand side represent three ways to change the mass of water stored. The first term involves changing the volume of water by filling the existing pore space with more water of the same density. The second term involves changing the volume of pore space, adding or withdrawing water of the same density to maintain the same saturation. The third term involves changing the density of the water, keeping the same volume of water. The second and third terms on the right-hand side together represent specific storage.
+
+\subsection{Formulation in terms of volumetric water content}
+
+As an alternative, one can separate out only the density-derivative term, leaving the product $s \phi$, the volumetric water content, intact as a dependent variable:
+\begin{equation}
+\frac{\partial (\rho s \phi)}{\partial t}
+  = \rho\,\frac{\partial (s\phi)}{\partial t}
+  + \phi s\, \frac{\partial \rho}{\partial t} .
+\label{eq-sto-expanded-rho}
+\end{equation}
+The focus of this formulation is the first term on the right-hand side, which involves the rate of change of the volumetric water content. This term accounts for both the change in saturation and the change in porosity, with the latter resulting from the compressibility of the porous matrix. The second term on the right-hand side accounts for the compressibility of water.\footnote{{\color{purple}It might also be considered to include the effects of solute concentration and temperature on density, but that's another topic altogether, and a rather deep one.}}
+
+The first term on the right-hand side of equation \ref{eq-sto-expanded-rho} is the only one considered in Celia's work. Thus, Celia's approach is based on the assumption that the water is incompressible ($\frac{\partial \rho}{\partial t} = 0$), which makes the second term on the right-hand side vanish. However, note that if we further simplify the expression by also assuming confined conditions ($\frac{\partial s}{\partial t} = 0$), then equation \ref{eq-sto-expanded-rho} reduces to
+\begin{equation}
+  \frac{\partial (\rho s \phi)}{\partial t}
+  = \rho s \frac{\partial \phi}{\partial t} .
+\label{eq-sto-const-rho-s}
+\end{equation}
+This expression accounts only for the compressibility of the porous matrix. While this might be appropriate in some use cases, it is not generally what we expect in terms of accounting for compressibility effects (which we typically want to include water), i.e., specific storage. And yet, from this analysis we see that it is inherent in the Celia-type approach based on volumetric water content.
+
+According to Farthing and Ogden (2017) [need a proper reference here], it is common to account for specific storage by simply adding it to the Celia-type storage term. However, because the Celia term already accounts for the compressibility of the porous matrix, adding the full specific storage term results in ``double counting'' the effect of porous matrix compressibility.  A proper accounting of specific storage could presumably be achieved by a ``modified Celia-type'' approach that includes the density-derivative term (the second term on the right-hand side of equation \ref{eq-sto-expanded-rho}, instead of the full specific storage term) and tracks the evolution of density with changing pressure via the water compressibility. That said, it is worth noting that adding the full specific storage term might not be so bad because in practice the Celia-type term, when related to a water retention curve measured in the laboratory, might not actually account for matrix compressibility effects found in the field.  In that case, one can pull $\phi$ out of the derivative in the Celia-type term, resulting in the saturation-based formulation we discuss next.
+
+\subsection{Formulation in terms of saturation}
+
+Another alternative is to separate out only the saturation-derivative term, leaving the product $\rho \phi$, the mass of water per volume of aquifer (``bulk density of water'') at full saturation, intact as a dependent variable:
+\begin{equation}
+\frac{\partial (\rho s \phi)}{\partial t}
+  = \rho \phi\, \frac{\partial s}{\partial t}
+  + s\,\frac{\partial (\rho \phi)}{\partial t}
+\label{eq-sto-expanded-s}
+\end{equation}
+The focus of this formulation is the first term on the right-hand side, which involves the rate of change in saturation. The second term on the right-hand side accounts for the compressibility of the water and the porous matrix, i.e., specific storage.
+
+This is the formulation we've adopted in this writeup, and it is consistent with the saturation-based formulations used in VS2D \cite{vs2d} and SUTRA \cite{vosssutra}. To conserve mass, it appears we need to either track the evolution of the specific storage term with time (see equation \ref{eq-rhophi-i}) or neglect specific storage altogether when the medium is partially saturated. Tracking specific storage should provide a ``smooth'' transition between partially and fully saturated conditions, as the full specific storage term would always be accounted for.\footnote{{\color{purple}Would we need to continue tracking specific storage explicitly even under fully saturated conditions? I think not, but I'm not entirely sure.}}.  Neglecting specific storage under partially saturated conditions would obviously cause a ``discontinuity'' in that that term would suddenly some into play under under fully saturated conditions. Not sure it makes a whole lot of difference from a model accuracy standpoint. Not tracking specific storage would certainly be simpler.
+
+\subsection{Formulation in terms of ``mass saturation''}
+
+The final alternative is to separate out only the porosity-derivative term, leaving the product $\rho s$, the mass of water per volume of pores (``mass saturation'' or ``pore density of water''\footnote{{\color{purple}Terms I made up; not used by anyone else as far as I know.}}), intact as a dependent variable:
+\begin{equation}
+\frac{\partial (\rho s \phi)}{\partial t}
+  = \phi\,\frac{\partial (\rho s)}{\partial t}
+  + \rho s\,\frac{\partial \phi}{\partial t}
+\label{eq-sto-expanded-phi}
+\end{equation}
+The focus of this formulation is the first term on the right-hand side, which involves the rate of change of the ``mass saturation''. This term accounts for both the change in saturation and the change in density, with the latter resulting from the compressibility of the water. The second term on the right-hand side accounts for the compressibility of the porous matrix.
+
+Here, one is apparently faced with a choice between either tracking the evolution of porosity or assuming it is constant, i.e., that the porous matrix is incompressible. If porosity is constant, this formulation suffers from a limitation similar to that of the Celia-like formulation. Under confined conditions ($\frac{\partial s}{\partial t} = 0$), the expression reduces to
+\begin{equation}
+  \frac{\partial (\rho s \phi)}{\partial t}
+  = s \phi \frac{\partial \rho}{\partial t} .
+\label{eq-sto-const-phi}
+\end{equation}
+which considers only the compressibility of the water and thus does not allow us to account fully for specific storage. Another issue with this formulation is that there probably are no parameterizations available for calculating $\rho s$ as a function of pressure or pressure head.
+
+}
 
 \bibliographystyle{plain}
 \bibliography{MODFLOW6References,techref}
