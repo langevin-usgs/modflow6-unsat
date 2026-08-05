@@ -76,6 +76,58 @@ Equation~\ref{eq-conservation} now becomes
   \rho \Gamma V = 0.
 \end{equation}
 
+
+{\color{violet}
+
+\noindent ============================================
+
+NOTE by AMP:  Looks like the density doesn't divide out the way we'd hoped.  Start with eqn~\ref{eq-conservation}, rewritten so that we're distinguishing between $\rho$, the uniform density in the cell, $\rho_{\sigma}$, the density associated with inflows and outflows along the boundary of the cell, and $\rho_{\Gamma}$, the density associated with other sources and sinks to and from the cell.  Then, recognizing that $\rho$, $s$, and $\phi$ are uniform throughout the cell volume $V$,
+
+\begin{equation}
+  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV +
+  \oint_\sigma \rho_{\sigma} \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \int_V \rho_{\Gamma} \Gamma \,dV = 0,
+  \label{eq-conservation-alt1}
+\end{equation}
+
+\begin{equation}
+  \frac{\partial}{\partial t} \int_V \rho s \phi \,dV +
+  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
+  \label{eq-conservation-alt2}
+\end{equation}
+
+\begin{equation}
+  V \frac{\partial}{\partial t} \left ( \rho s \phi \right ) +
+  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
+  \label{eq-conservation-alt3}
+\end{equation}
+
+\begin{equation}
+  \rho s S_s V \frac{\partial h}{\partial t} +
+  \rho \phi V \frac{\partial s}{\partial t} +
+  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
+  \label{eq-conservation-alt4}
+\end{equation}
+
+\begin{equation}
+  s S_s V \frac{\partial h}{\partial t} +
+  \phi V \frac{\partial s}{\partial t} +
+  \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
+  \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0.
+  \label{eq-conservation-alt4}
+\end{equation}
+
+\noindent The resulting balance equation shows that to conserve mass, we have to scale the boundary and source-sink flows by appropriate density ratios.  This is essentially using ``apparent volumes.''  In other words, $\frac{\rho_{\sigma}}{\rho} \mathbf{q}$ and $\frac{\rho_{\sigma}}{\rho} \Gamma$ are the volumetric flow rates for water at density $\rho$ that correspond to the same \textit{mass} flow rates as the actual volumetric flow rates $\mathbf{q}$ (at density $\rho_{\sigma}$) and $\Gamma$  (at density $\rho_{\Gamma}$).  Seems this concept is bound to come up (in some form) if we want to use a volume balance and still conserve mass in some sense.
+
+Another way to look at it is that for eqn~\ref{eq-conservation-alt4} to reduce to a straight-up volume balance, we need $\rho_{\sigma} = \rho_{\Gamma} = \rho$.  That implies that all the incoming flows -- whether from other cells (or model features), or from external sources -- need to be at density $\rho$.  Propagating this requirement from cell to cell\footnote{{\color{violet}Assuming there are no hydraulically disconnected parts of the model.}}, we end up requiring that all flows throughout the model be at the same density.  That corresponds to our ``constant-density flow'' assumption with variations in density being confined to specific storage, which is the idea behind apparent volume.
+
+\noindent ============================================
+
+}
+
 \subsection{Fluid-Flux Equation}
 The fluid flux $\mathbf{q}$ is given by Darcy's law for unsaturated flow:
 \begin{equation}
@@ -493,7 +545,6 @@ coefficients $\beta$ and $k$ are not the same.
       {
         \left[ 1 + (-\alpha \psi)^n \right]^{m/2}
       }
-      
       \quad   & \psi \leq 0 \\
       1 \quad & \psi > 0
     \end{aligned}
