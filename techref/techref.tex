@@ -210,7 +210,7 @@ equation~\ref{eq-sto-terms}:
   &&\text{Fluid compressibility coefficient: }
   \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
   &&\text{Solid matrix compressibility coefficient: }
-  \alpha_c = {\color{purple}\frac{1}{1 - \phi}} \frac{\partial \phi}{\partial p}.
+  \alpha_c = \frac{1}{1 - \phi} \frac{\partial \phi}{\partial p}.
 \end{eqnarray*}
 Now with the approximation that the density of water depends on
 pressure only \footnote{{\color{purple}Not seeing how this works now, will need to review.}
@@ -222,9 +222,12 @@ $\rho = \rho(p)$, the change in storage can be written as:
   \rho \phi \frac{\partial s}{\partial t}.
   \label{eq-sto}
 \end{equation}
-The specific storage \footnote{{\color{purple}It should be noted that the assumptions underlying the specific storage formulation don't necessarily hold in the unsaturated case, but the error from including it is generally small; see, for example, the SUTRA manual.}} in this equation is defined as
+The specific storage \footnote{{\color{purple}It should be noted that the assumptions 
+underlying the specific storage formulation don't necessarily hold in the unsaturated 
+case, but the error from including it is generally small; see, for example, the 
+SUTRA manual.}} in this equation is defined as
 \begin{equation}
-  S_s = \rho g {\color{purple}\left[ \phi \beta_c + (1 - \phi) \alpha_c \right]}.
+  S_s = \rho g \left[ \phi \beta_c + (1 - \phi) \alpha_c \right].
   \label{eq-spec-sto}
 \end{equation}
 
@@ -258,11 +261,14 @@ with (repeated here for convenience):
   \sigma_\alpha &=& \text{surface area of face $\alpha$} \\
   \Gamma &=& \text{volumetric source-sink term}
 \end{eqnarray*}
-
-Note that as the medium approaches full saturation, the derivative
-$\partial s/ \partial t$ vanishes and $k_r$ becomes equal to 1.
-In that case, the above expression converges smoothly to the saturated
-groundwater flow equation used in MODFLOW~6:
+During the assembly of equation~\ref{eq-unsat-flow}, the density $\rho$ appears 
+as a factor in all the terms and cancels out. This marks the transition between 
+the mass based balance law that is the starting point of the derivation, 
+to a formulation that rests on a conservation of water volume as used in
+MODFLOW~6. Note that as the medium approaches full saturation, 
+the derivative $\partial s/ \partial t$ vanishes and $k_r$ becomes equal to 1.
+In that case, the above expression converges smoothly to the saturated groundwater
+flow equation used in MODFLOW~6:
 \begin{equation}
   V S_s \frac{\partial h}{\partial t} -
   \sum_{\alpha=1}^{m} \overline{K_{\textrm{sat}}}
@@ -518,7 +524,8 @@ finite-difference equations will have terms that are a function
 of the discretized dependent variable, such as $k_r = k_r(h)$ and 
 $s = s(h)$. These non-linearities can be overcome using a standard
 Picard iteration method\footnote{Are we planning to support non-NR
-  treatment of Richards flow?? AMP: good question - was wondering about that, too} or by applying the Newton-Raphson 
+  treatment of Richards flow?? AMP: good question - was wondering about 
+  that, too} or by applying the Newton-Raphson 
 linearization that is known to provide more stability when solving for
 cells that are under a water-table condition. For each cell in the
 the grid that is under variably saturated flow conditions, the
@@ -678,10 +685,17 @@ will generally lead to mass balance errors in case the analytical
 A more detailed discussion of the subject can be found in
 \cite{rathfelder-1994} and references therein.
 
-Instead of applying the product rule in the continuous domain
-and working with the expression on the right-hand side of 
-equation~\ref{eq-sto}, the discrete difference is used
-as a starting point instead:
+Therefore, instead of applying the product rule in the continuous 
+domain and working with the expression on the right-hand side of 
+equation~\ref{eq-sto}, discrete differences are used as a
+starting point. The volumetric rate of change over a time interval 
+$\Delta t$ in a representative elementary volume $V$ is given
+by
+\begin{equation}
+  Q_{\Sigma} = \frac{ V \Delta\left ( \rho s \phi \right )}{\rho \Delta t}.
+\end{equation}
+The change in the mass of water stored per volume of aquifer can be
+expanded as
 \begin{equation}
   \Delta \left ( \rho s \phi \right ) \equiv
   \left ( \rho s \phi \right )^{i} - 
@@ -691,15 +705,35 @@ as a starting point instead:
   \label{eq-delta_sto}
 \end{equation}
 where $i$ and $i-1$ label the time levels at which terms
-are evaluated and the time interval $\Delta t$ over which the 
+are evaluated and the time interval $\Delta t$ for which the 
 change is determined, is given as
 \begin{equation}
   \Delta t = t^i - t^{i-1}.
 \end{equation}
+
 Respecting equation~\ref{eq-delta_sto} is clearly necessary to conserve
 mass, but not sufficient. The evaluation of the individual terms
 as so called state functions is essential and deserves particular
 attention when converting the dependent variable to head.
+
+{\color{blue}
+Some remarks: from here on I'd like to derive the discretized storage terms.
+I am not sure though if the splitting into two distinct storage
+rates (specific and 'unsaturated') is reasonable. And maybe there
+is no need for it anyway... Can we define $Q_{Ss}$ as the rate 
+that comes from varying $h$ exclusively? The following three
+storage formulations from our notes/derivations are equivalent:
+\begin{eqnarray}
+  Q_\Sigma &=& \rho_0 \phi_0 \Delta s + 
+    S_s \left( \psi^i s^i - \psi^{i-1} s^{i-1} \right) \\
+  Q_\Sigma &=& \rho^{i-1} \phi^{i-1} \Delta s + 
+    S_s s^i \Delta h \\
+  Q_\Sigma &=& [\rho \phi]_{h=0} \Delta s + 
+    S_s \left( h^i s^i - h^{i-1} s^{i-1} \right)
+\end{eqnarray}
+So is it the second equation maybe, that naturally defines the two
+distinct rates.
+}
 
 Following the existing procedure in MODFLOW 6 for confined and
 unconfined groundwater storage, the general equation for storage
