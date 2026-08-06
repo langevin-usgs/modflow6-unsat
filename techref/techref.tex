@@ -218,7 +218,33 @@ the problems we are considering here, the water is assumed homogeneous
 with no variation in solute concentration or temperature. This makes 
 that $\nabla \rho$ itself is negligibly small.
 
+} % end color
 
+{\color{violet}
+
+\noindent ============================================
+
+NOTE by AMP:  Thanks for your response -- it makes sense.  In my analysis,
+getting to the volume balance hinges on the idea of apparent volume.
+In yours, it hinges on assuming that the spatial variation is negligible
+compared to the temporal variation.  But I think they're actually two sides
+of the same coin -- two different ways of saying that we're going to
+neglect density variations insofar as flows are concerned, but we'll
+account for their effect on storage.  Your analysis makes that assumption earlier
+on, before integration over the cell volume, whereas mine does so after the
+integration, but i think the underlying idea is the same.  One thing to note is that
+in eqns~\ref{eq-balance-equation} and \ref{eq-balance-equation-nogradrho}
+I think the density in $\rho \Gamma$ needs to be interpreted as
+the density of the source or sink, which for a source can be different than the
+prevailing density at that location in the aquifer.  So the assumption of no
+spatial variation in density needs to be extended to external sources, as well, 
+which is perfectly consistent with the assumptions made in my analysis.  We
+should discuss, but at this point my feeling is that we're essentially saying the
+same thing, but you're working with differential volumes, and I'm working with
+non-infinitesimal volumes for which the assumptions being made are maybe
+easier to conceptualize.
+
+\noindent ============================================
 
 } % end color
 
