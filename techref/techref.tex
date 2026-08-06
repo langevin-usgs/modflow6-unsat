@@ -13,7 +13,11 @@
 \tableofcontents
 
 \section{Theoretical Development}
-In this section ...
+This section presents the fundamental equations and theoretical framework 
+governing variably saturated flow in porous media. The development begins 
+with the conservation of mass for the water phase, followed by constitutive 
+relations that link water content and hydraulic properties to matric potential. 
+These equations form the basis for the numerical implementation in MODFLOW 6.
 
 \subsection{Conservation of Mass}
 In case of variably saturated flow, the void space is occupied by 
@@ -22,9 +26,7 @@ the simultaneous flow of both phases. For the process described here
 it is assumed that there is no mass transfer between the fases and
 the air is stagnant such that its pressure equals zero everywhere.
 Under those conditions, the differential macroscopic mass balance 
-equation for the water phase has the form (c.f. equation~(6.3.3)
-in Bear and Cheng, 2010):
-
+equation for the water phase has the form:
 \begin{equation}
   \frac{\partial (\rho s \phi)}{\partial t} +
   \nabla \cdot (\rho \mathbf{q}) -
@@ -42,6 +44,8 @@ where
   && \textrm{($\Gamma > 0$) or taken away ($-\Gamma < 0$) from the volume $\Omega$, per unit} \\
   && \textrm{volume per unit time, [T\textsuperscript{-1}]}
 \end{eqnarray*}
+This is the starting point for the analysis here. The derivation
+is presented in, for example, Bear and Cheng, 2010.
 
 {\color{lightgray}
 Integrating equation~\ref{eq-balance-equation} over a volume of porous
