@@ -44,212 +44,106 @@ where
   && \textrm{($\Gamma > 0$) or taken away ($-\Gamma < 0$) from the volume $\Omega$, per unit} \\
   && \textrm{volume per unit time, [T\textsuperscript{-1}]}
 \end{eqnarray*}
-This is the starting point for the analysis here. The derivation
-is presented in, for example, Bear and Cheng, 2010.
+This equation is the starting point for the analysis that follows. 
+A detailed derivation can be found in, for example, Bear and Cheng, 2010.
 
-{\color{lightgray}
-Integrating equation~\ref{eq-balance-equation} over a volume of porous
-medium $V$ bounded by a surface $\sigma$, and applying Gauss's theorem
-leads to:
+\subsection{Storage Term}
+The change in mass of water that is held in storage is given by the first 
+term in equation~\ref{eq-balance-equation}. This can be expressed in terms 
+of hydraulic head, the principal dependent variable for solving the system
+of equations, as follows:
 \begin{equation}
-  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV +
-  \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \int_V \rho \Gamma \,dV = 0,
-  \label{eq-conservation}
+  \frac{\partial (\rho s \phi)}{\partial t} =
+  \left[
+    s \phi \frac{\partial \rho}{\partial h} +
+    \rho s \frac{\partial \phi}{\partial h}
+    \right]
+  \frac{\partial h}{\partial t} +  
+  \rho \phi \frac{\partial s}{\partial t}.
+  \label{eq-sto-terms}
 \end{equation}
-where $\mathbf{n}$ equals the normal vector to the surface $\sigma$. 
-Equation~\ref{eq-conservation} states that the rate of change of
-mass stored in $V$ must be balanced by the sum of liquid flux across
-the surface boundary of $V$ and of liquid added by sources or removed
-at sinks.
+Between brackets are two distinct terms contributing to the water
+added to or released from storage due to changes of the hydraulic
+head: the fluid compressibility term to account for changes in the
+fluid density $\rho$ and a term to represent the (elastic)
+compression of the solid matrix given by the change in the porosity
+of the medium $\phi$. The last term on the right accounts for the
+change in soil saturation, which is a function of pressure head $\psi$ 
+or, in case that the $z$ coordinate is fixed, of hydraulic 
+head: $s = s(h)$.
 
-The volume $V$ is assumed small enough that within it, the
-liquid density ($\rho$), saturation ($s$), and porosity ($\phi$) can be
-considered constant "representative" values, such that the first term of
-equation~\ref{eq-conservation} can be expressed as
+For any particular type of soil or geologic formation, these variables
+are assumed to be a function of pressure only. The following definitions
+are introduced to rewrite the right-hand side of
+equation~\ref{eq-sto-terms}:
+\begin{eqnarray*}
+  &&\text{Fluid compressibility coefficient: }
+  \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
+  &&\text{Solid matrix compressibility coefficient: }
+  \alpha_c = \frac{1}{1 - \phi} \frac{\partial \phi}{\partial p}.
+\end{eqnarray*}
+Now with the approximation that the density of water depends on
+pressure only, $\rho = \rho(p)$, the change in storage can be written as:
 \begin{equation}
-  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV = 
-  V \frac{\partial (\rho s \phi)}{\partial t},
+  \frac{\partial (\rho s \phi)}{\partial t} =
+  \rho s S_s \frac{\partial h}{\partial t} +
+  \rho \phi \frac{\partial s}{\partial t}.
+  \label{eq-sto}
 \end{equation}
-and the third term as
+The specific storage \footnote{It should be noted that the assumptions 
+underlying the specific storage formulation don't necessarily hold in the unsaturated 
+case, but the error from including it is generally small; see, for example, the 
+SUTRA manual.} in this equation is defined as
 \begin{equation}
-  \int_V \rho \Gamma \,dV = \rho \Gamma V.
+  S_s = \rho g \left[ \phi \beta_c + (1 - \phi) \alpha_c \right].
+  \label{eq-spec-sto}
 \end{equation}
-Equation~\ref{eq-conservation} now becomes
+Substituting this into equation~\ref{eq-balance-equation} yields
 \begin{equation}
-  V \frac{\partial (\rho s \phi)}{\partial t} +
-  \oint_\sigma \rho \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \rho \Gamma V = 0.
+  \rho s S_s \frac{\partial h}{\partial t} +
+  \rho \phi \frac{\partial s}{\partial t} +
+  \nabla \cdot (\rho \mathbf{q}) -
+  \rho \Gamma = 0
+  \label{eq-balance-equation-sto}
 \end{equation}
-} % end color
-
-{\color{violet}
-
-\noindent ============================================
-
-NOTE by AMP:  Looks like the density doesn't divide out the way we'd 
-hoped.  Start with eqn~\ref{eq-conservation}, rewritten so that we're 
-distinguishing between $\rho$, the uniform density in the cell, 
-$\rho_{\sigma}$, the density associated with inflows and outflows 
-along the boundary of the cell, and $\rho_{\Gamma}$, the density 
-associated with other sources and sinks to and from the cell.  
-Then, recognizing that $\rho$, $s$, and $\phi$ are uniform throughout 
-the cell volume $V$,
-
-\begin{equation}
-  \int_V \frac{\partial (\rho s \phi)}{\partial t} \,dV +
-  \oint_\sigma \rho_{\sigma} \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \int_V \rho_{\Gamma} \Gamma \,dV = 0,
-  \label{eq-conservation-alt1}
-\end{equation}
-
-\begin{equation}
-  \frac{\partial}{\partial t} \int_V \rho s \phi \,dV +
-  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
-  \label{eq-conservation-alt2}
-\end{equation}
-
-\begin{equation}
-  V \frac{\partial}{\partial t} \left ( \rho s \phi \right ) +
-  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
-  \label{eq-conservation-alt3}
-\end{equation}
-
-\begin{equation}
-  \rho s S_s V \frac{\partial h}{\partial t} +
-  \rho \phi V \frac{\partial s}{\partial t} +
-  \rho \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \rho \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0,
-  \label{eq-conservation-alt4}
-\end{equation}
-
-\begin{equation}
-  s S_s V \frac{\partial h}{\partial t} +
-  \phi V \frac{\partial s}{\partial t} +
-  \oint_\sigma \frac{\rho_{\sigma}}{\rho} \mathbf{q} \cdot \mathbf{n} d\sigma -
-  \int_V \frac{\rho_{\Gamma}}{\rho} \Gamma \,dV = 0.
-  \label{eq-conservation-alt4}
-\end{equation}
-
-\noindent The resulting balance equation shows that to conserve mass, 
-we have to scale the boundary and source-sink flows by appropriate 
-density ratios.  This is essentially using ``apparent volumes.''  
-In other words, $\frac{\rho_{\sigma}}{\rho} \mathbf{q}$ and 
-$\frac{\rho_{\sigma}}{\rho} \Gamma$ are the volumetric flow rates for 
-water at density $\rho$ that correspond to the same \textit{mass} flow 
-rates as the actual volumetric flow rates $\mathbf{q}$ (at density 
-$\rho_{\sigma}$) and $\Gamma$  (at density $\rho_{\Gamma}$).  
-Seems this concept is bound to come up (in some form) if we want 
-to use a volume balance and still conserve mass in some sense.
-
-Another way to look at it is that for eqn~\ref{eq-conservation-alt4} 
-to reduce to a straight-up volume balance, we need 
-$\rho_{\sigma} = \rho_{\Gamma} = \rho$.  That implies that all the 
-incoming flows -- whether from other cells (or model features), or from 
-external sources -- need to be at density $\rho$.  Propagating this 
-requirement from cell to cell\footnote{{\color{violet}Assuming there 
-are no hydraulically disconnected parts of the model.}}, we end up 
-requiring that all flows throughout the model be at the same density.  
-That corresponds to our ``constant-density flow'' assumption with 
-variations in density being confined to specific storage, which is 
-the idea behind apparent volume.
-
-\noindent ============================================
-
-} % end color
-
-{\color{cyan}
-REPLY by MJR: I think you are right that equation~\ref{eq-conservation}
-complicates matters. The density does not divide out, as you mention,
-but I think it's a result of performing the volume integral too soon here.
-Let's keep working with the form from equation~\ref{eq-balance-equation}
-a little bit longer. The divergence term can be expanded as
+This expression can be further simplified when using the
+following identity for the divergence term
 \begin{equation}
   \nabla \cdot (\rho \mathbf{q}) = 
     \mathbf{q} \cdot (\nabla \rho) + \rho \nabla \cdot \mathbf{q}
+  \label{eq-div-rule-rho}
 \end{equation}
-and the storage term contains a component
+Now the storage term above has a component that depends on the
+change of $\rho$ over time
 \begin{equation}
    \frac{\partial (\rho s \phi)}{\partial t} = \dots + 
-    s \phi \frac{\partial \rho}{\partial t}
+    s \phi \frac{\partial \rho}{\partial t}.
 \end{equation} 
-It is my impression that both in literature and in practice the term
-with $\nabla \rho$ is discarded assuming that the temporal
-variation of $\rho$ is much greater than its spatial variation:
+Then the term containing the gradient of the density in
+equation~\ref{eq-div-rule-rho} can be discarded because in practice the 
+temporal variation in $\rho$ is much larger than its spatial variation:
 \begin{equation}
   \left| s \phi \frac{\partial \rho}{\partial t} \right| \gg
   \left| \mathbf{q} \cdot (\nabla \rho) \right|
   \label{eq-density-assumption}
 \end{equation}
-Let's assume this is valid for now, then equation~\ref{eq-balance-equation}
-becomes
+The balance equation for variably saturated flow then becomes:
 \begin{equation}
-  \frac{\partial (\rho s \phi)}{\partial t} +
-  \rho \nabla \cdot \mathbf{q} -
-  \rho \Gamma = 0,
-  \label{eq-balance-equation-nogradrho}
+  s S_s \frac{\partial h}{\partial t} +
+  \phi \frac{\partial s}{\partial t} +
+  \nabla \cdot \mathbf{q} -
+  \Gamma = 0
+  \label{eq-balance-equation-gradq}
 \end{equation}
-If we combine this with the storage term as given by equation~\ref{eq-sto}, 
-we arrive at the following macroscopic balance equation:
-\begin{equation}
-  \rho s S_s \frac{\partial h}{\partial t} +
-  \rho \phi \frac{\partial s}{\partial t} +
-  \rho \nabla \cdot \mathbf{q} -
-  \rho \Gamma = 0.
-\end{equation}
-Here it seems that we can safely divide out the density. We have to keep in
-mind that $\Gamma$ is a volumetric source/sink of water with a density 
-equal to that of the water at the location where it is applied.
-In a strict sense this is not a valid mass source, but it is consistent
-with how things are done in MODFLOW~6.
-
-After some reading and thinking, I believe that I understand why
-equation~\ref{eq-density-assumption} holds true, but I look forward
-to discuss further. Anyway, say we pump into (or out of) an aquifer, this
-will change the pressure by a significant amount. The change will propagate
-through the water with the speed of sound: $1500 m/s$. This combination 
-should be compared to $\mathbf{q} \nabla \rho$ which represents how much 
-the density changes at a fixed point because a fluid of a different 
-density is physically flowing past it. In this case the velocity is 
-extremely small, namely that of Darcy flow, say $10^{-5} m/s$. And for 
-the problems we are considering here, the water is assumed homogeneous 
-with no variation in solute concentration or temperature. This makes 
-that $\nabla \rho$ itself is negligibly small.
-
-} % end color
-
-{\color{violet}
-
-\noindent ============================================
-
-NOTE by AMP:  Thanks for your response -- it makes sense.  In my analysis,
-getting to the volume balance hinges on the idea of apparent volume.
-In yours, it hinges on assuming that the spatial variation is negligible
-compared to the temporal variation.  But I think they're actually two sides
-of the same coin -- two different ways of saying that we're going to
-neglect density variations insofar as flows are concerned, but we'll
-account for their effect on storage.  Your analysis makes that assumption earlier
-on, before integration over the cell volume, whereas mine does so after the
-integration, but i think the underlying idea is the same.  One thing to note is that
-in eqns~\ref{eq-balance-equation} and \ref{eq-balance-equation-nogradrho}
-I think the density in $\rho \Gamma$ needs to be interpreted as
-the density of the source or sink, which for a source can be different than the
-prevailing density at that location in the aquifer.  So the assumption of no
-spatial variation in density needs to be extended to external sources, as well, 
-which is perfectly consistent with the assumptions made in my analysis.  We
-should discuss, but at this point my feeling is that we're essentially saying the
-same thing, but you're working with differential volumes, and I'm working with
-non-infinitesimal volumes for which the assumptions being made are maybe
-easier to conceptualize.
-
-\noindent ============================================
-
-} % end color
+The fact that the density is no longer present in this
+equation deserves some attention. The terms now correspond to
+a volume and no longer to mass.\footnote{We should discuss the
+consequences. This might also be where we can link to the
+'apparent volume' viewpoint}.
 
 \subsection{Fluid-Flux Equation}
-The fluid flux $\mathbf{q}$ is given by Darcy's law for unsaturated flow:
+The fluid flux $\mathbf{q}$ in equation~\ref{eq-balance-equation-gradq}
+is defined by Darcy's law for unsaturated flow:
 \begin{equation}
   \mathbf{q} = - \frac{\mathbf{k}(s)}{\mu} \cdot ( \nabla p + \rho g \nabla z ),
 \end{equation}
@@ -262,17 +156,21 @@ $h$ as
   \mathbf{q} = - \mathbf{K}(s) \cdot \nabla h,
   \label{eq-unsat-darcy-flux}
 \end{equation}
-with $\mathbf{K}$ a rank-2 tensor of hydraulic conductivity. The hydraulic
-head equals the sum of the pressure head $\psi$ and the vertical
-coordinate $z$:
+with
+\begin{equation}
+  \mathbf{K} = \frac{\rho g}{\mu} \mathbf{k},
+  \label{eq-hydr-cond}
+\end{equation}
+the hydraulic conductivity tensor, and the hydraulic head equals the 
+sum of the pressure head $\psi = p/(\rho g)$ and the elevation head:
 \begin{equation}
   h = \psi + z.
 \end{equation}
 
-The concept of relative hydraulic conductivity\footnote{More fundamental would
-  be relative permeability, but we are not planning on using that here, do we?}
-is commonly used to capture the dependence of the conductivity on saturation. 
-For example, in an isotropic porous medium:
+The concept of relative hydraulic conductivity is commonly used to 
+capture the dependence of the conductivity on saturation. For example, 
+in an isotropic porous medium, the fluid flux (also specific discharge)
+is given by:
 \begin{equation}
   \mathbf{q} = - k_\textrm{r}(s) K_{\textrm{sat}} \nabla h,
 \end{equation}
@@ -312,145 +210,84 @@ to treat variably saturated flow in three-dimensional anisotropic media,
 consistent with the XT3D capability \cite{modflow6xt3d} available in
 MODFLOW 6 for saturated groundwater flow. For practical reasons, such
 as limiting the challenge of calibrating the conductivities in a model,
-it is assumed that relative hydraulic conductivity is isotropic. This
-implies that equation~\ref{eq-unsat-darcy-flux} can be written as
+it is assumed that relative hydraulic conductivity is isotropic. With this
+simplifying assumption, equation~\ref{eq-unsat-darcy-flux} can be written as
 \begin{equation}
   \mathbf{q} = - k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h,
 \end{equation}
 where $k_r$ is a scalar function of saturation. This approximation
 has been used in many simulation codes 
 (e.g., \cite{vs2d,modflowvsf,vosssutra,panday-surfact}), but it has been
-pointed out that the effect of saturation generally depends on 
-direction \cite{bear-1987}.
-
-Substituting the expression for the fluid flux into equation~\ref{eq-conservation}
-leads to
-\begin{equation}
-  V \frac{\partial (\rho s \phi)}{\partial t} -
-  \oint_\sigma \rho k_\text{r}(s) \mathbf{K}_{\textrm{sat}}
-  \cdot \nabla h \cdot \mathbf{n} d\sigma -
-  \rho \Gamma V = 0.
-\end{equation}
-
-If the terms in the surface integral can be considered constant over each of the 
-$m$ faces of an arbitrary prismatic volume element (isotropic!?), 
-this can be written as:
-\begin{equation}
-  V \frac{\partial (\rho s \phi)}{\partial t} -
-  \rho \sum_{\alpha=1}^{m} \overline{k_r K_{\textrm{sat}}}
-  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
-  \rho \Gamma V = 0,
-  \label{eq-diff-csv}
-\end{equation}
-where $\sigma_\alpha$ equals the area of the $\alpha$ face and the bar indicates 
-that an effective value is used for hydraulic conductivity, to be discussed 
-in more detail in section~\ref{sec-cond-avg}. Additionally, the head 
-gradient is assumed to be normal to the faces bounding the volume which
-means that for any face $\alpha$ it follows that:
-$(\nabla h)_\alpha = (\partial h/\partial n)_\alpha \mathbf{n_\alpha}$.
-
-\subsection{Storage Term}
-The change in mass of water that is held in storage is given by the first 
-term in equation~\ref{eq-diff-csv}. This can be expressed in terms of hydraulic
-head, the principal dependent variable for solving the system of equations,
-as follows:
-\begin{equation}
-  \frac{\partial (\rho s \phi)}{\partial t} =
-  \left[
-    s \phi \frac{\partial \rho}{\partial h} +
-    \rho s \frac{\partial \phi}{\partial h}
-    \right]
-  \frac{\partial h}{\partial t} +  
-  \rho \phi \frac{\partial s}{\partial t}.
-  \label{eq-sto-terms}
-\end{equation}
-Between brackets are two distinct terms contributing to the water
-added to or released from storage due to changes of the hydraulic
-head: the fluid compressibility term to account for changes in the
-fluid density $\rho$ and a term to represent the (elastic)
-compression of the solid matrix given by the change in the porosity
-of the medium $\phi$. The last term on the right accounts for the
-change in soil saturation, which is a function of pressure head $\psi$, 
-or, in this case where the $z$ coordinate is fixed, of hydraulic 
-head: $s = s(h)$.
-
-For any particular type of soil or geologic formation, these variables
-are assumed to be a function of pressure only. The following definitions
-are introduced to restructure the right-hand side of
-equation~\ref{eq-sto-terms}:
-\begin{eqnarray*}
-  &&\text{Fluid compressibility coefficient: }
-  \beta_c = \frac{1}{\rho} \frac{\partial \rho}{\partial p} \\
-  &&\text{Solid matrix compressibility coefficient: }
-  \alpha_c = \frac{1}{1 - \phi} \frac{\partial \phi}{\partial p}.
-\end{eqnarray*}
-Now with the approximation that the density of water depends on
-pressure only \footnote{{\color{purple}Not seeing how this works now, will need to review.}
-{\color{blue}I think it is in the spirit of Bear and Cheng, 5.1.31 and 5.1.32}}, 
-$\rho = \rho(p)$, the change in storage can be written as:
-\begin{equation}
-  \frac{\partial (\rho s \phi)}{\partial t} =
-  \rho s S_s \frac{\partial h}{\partial t} +
-  \rho \phi \frac{\partial s}{\partial t}.
-  \label{eq-sto}
-\end{equation}
-The specific storage \footnote{{\color{purple}It should be noted that the assumptions 
-underlying the specific storage formulation don't necessarily hold in the unsaturated 
-case, but the error from including it is generally small; see, for example, the 
-SUTRA manual.}} in this equation is defined as
-\begin{equation}
-  S_s = \rho g \left[ \phi \beta_c + (1 - \phi) \alpha_c \right].
-  \label{eq-spec-sto}
-\end{equation}
+pointed out that the effect of saturation on the conductivity generally 
+depends on direction \cite{bear-1987}.
 
 \subsection{Variably Saturated Flow Equation}
-Putting the results from the previous sections together,
-substituting the storage terms (equation~\ref{eq-sto}) into the 
-differential form of the balance law (equation~\ref{eq-diff-csv}), 
-leads to Richards' equation, a nonlinear partial differential equation for 
-variably saturated flow:
-\begin{equation}  
-  V
-  \left(
-  s S_s \frac{\partial h}{\partial t} + 
-  \phi \frac{\partial s}{\partial t}
-  \right) -
-  \sum_{\alpha=1}^{m} \overline{k_r K_{\textrm{sat}}}
-  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
-  \Gamma V = 0.
-  \label{eq-unsat-flow}
+Using the results from previous sections, the macroscopic mass balance 
+equation for the flow of water in a partially saturated porous medium, 
+assuming that the air phase is stagnant and its pressure is atmospheric 
+everywhere, can be written as
+\begin{equation}
+  \left(s S_s  + C(\psi)\right)\frac{\partial h}{\partial t} =
+  \nabla \cdot \left[ 
+    k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h \right] +
+  \Gamma,
+  \label{eq-balance-equation-darcy}
 \end{equation}
-with (repeated here for convenience):
+with
 \begin{eqnarray*}
-  V &=& \text{the representative elementary volume} \\
   s &=& \text{water saturation} \\
   S_s &=& \text{specific storage} \\
+  C &=& \text{moisture capacity} \\
   h &=& \text{hydraulic head} \\
-  \phi &=& \text{porosity}, \\
-  \overline{k_r} &=& \text{effective relative hydraulic conductivity} \\
-  \overline{K} &=& \text{effective hydraulic conductivity} \\
-  (\partial h/\partial n)_\alpha &=& \text{head gradient normal to face $\alpha$} \\
-  \sigma_\alpha &=& \text{surface area of face $\alpha$} \\
+  k_r &=& \text{relative hydraulic conductivity} \\
+  \mathbf{K}_{\textrm{sat}} &=& \text{saturated hydraulic conductivity} \\
   \Gamma &=& \text{volumetric source-sink term}
 \end{eqnarray*}
-During the assembly of equation~\ref{eq-unsat-flow}, the density $\rho$ appears 
-as a factor in all the terms and cancels out. This marks the transition between 
-the mass based balance law that is the starting point of the derivation, 
-to a formulation that rests on a conservation of water volume as used in
-MODFLOW~6. Note that as the medium approaches full saturation, 
-the derivative $\partial s/ \partial t$ vanishes and $k_r$ becomes equal to 1.
-In that case, the above expression converges smoothly to the saturated groundwater
-flow equation used in MODFLOW~6:
+and using that, with elevation held constant, the time-derivative 
+of saturation can be expressed in terms of the moisture capacity as
 \begin{equation}
-  V S_s \frac{\partial h}{\partial t} -
-  \sum_{\alpha=1}^{m} \overline{K_{\textrm{sat}}}
-  \left[\frac{\partial h}{\partial n}\right]_\alpha \sigma_\alpha -
-  \Gamma V = 0.
-  \label{eq-sat-flow}
+  \phi \frac{\partial s}{\partial t} = 
+  \phi \frac{\partial s}{\partial \psi} \frac{\partial \psi}{\partial t} =
+  C(\psi) \frac{\partial h}{\partial t},
 \end{equation}
-It is this concept of continuity that is used to integrate the 
-variably saturated flow mechanism into the existing flow formulation.
+such that the storage term is now formulated in terms of $h$, the
+dependent variable that will eventually be solved for. 
+Equation~\ref{eq-balance-equation-darcy} constitutes the continuous
+variably saturated flow equation that forms the basis for the numerical 
+solution and the discretization technique that is explained in 
+section~\ref{sec-num-sol} below.
 
+{\color{cyan} A temporary note that needs to be straightened out is the 
+following. The specific moisture capacity is often defined as the slope
+of the moisture retention curve:
+\begin{equation}
+  \frac{\partial \theta}{\partial t} =  
+  \frac{\partial \theta}{\partial \psi} \frac{\partial \psi}{\partial t} =
+  C(\psi) \frac{\partial \psi}{\partial t}
+\end{equation}
+For example, as is done in Van Genuchten's original paper (1980). 
+However, Bear\&Cheng define it (6.3.20) as
+\begin{equation}
+  C(p) = \phi \frac{\partial s}{\partial p}
+  \label{eq-moist-cap-bear}
+\end{equation}
+and a conversion to pressure head follows later renaming the capacity
+function to $C'$. This is what we have followed initially in this
+report. Now you can argue that it doesn't matter all that
+much because the change in water content $\theta$ is fully driven by 
+the change in $s$ anyway. But it ties directly into our discussion about
+potentially double counting the storage change due to compressibility
+of the pore matrix. In our derivation above, we have that effect already
+accounted for through the definition of $S_s$. So in order to keep doing 
+things consistent, we would need to make sure that the parametrizations that 
+are used for $C$ are actually as defined in the spirit of 
+equation~\ref{eq-moist-cap-bear}? To add to all possible confusion,
+the article by Miller et al. (1998) talks about $S_s$ as a coefficient
+that accounts for the water compressibility only. This would naturally
+coincide with having the porosity $\psi$ within the derivative again
+such that changes to the pore space are accounted for through $C$
+and not through $S_s$...
+} % end color
 
 \subsection{Initial and Boundary Conditions}\label{sec-boundary-conditions}
 
@@ -475,7 +312,8 @@ These characteristic curves are generally determined from experiment
 by fitting a parametrized algebraic function to the measured data. 
 A benefit of using such a function is that its derivative can be used 
 to define the specific moisture capacity. Additionally, integration 
-leads to a relation between relative hydraulic conductivity and pressure potential \cite{???}. These three analytical functions are required for 
+leads to a relation between relative hydraulic conductivity and pressure 
+potential \cite{???}. These three analytical functions are required for 
 the numerical solution of equation~\ref{eq-unsat-flow}. 
 Figure~\ref{fig-unknown} shows experimental data and their fits
 for different types of soil.
@@ -677,6 +515,7 @@ and $m = 1 - 1/n$ as before.
 \subsubsection{Hysteresis}
 
 \section{Numerical Solution}
+\label{sec-num-sol}
 Equation~\ref{eq-unsat-flow}, together with the boundary conditions as
 described in section~\ref{sec-boundary-conditions}, is a highly non-linear
 partial differential equation that has no general closed-form solution.
@@ -694,16 +533,14 @@ neighbouring cells and between subsequent time values. The resulting
 finite-difference equations will have terms that are a function
 of the discretized dependent variable, such as $k_r = k_r(h)$ and 
 $s = s(h)$. These non-linearities can be overcome using a standard
-Picard iteration method\footnote{Are we planning to support non-NR
-  treatment of Richards flow?? AMP: good question - was wondering about 
-  that, too} or by applying the Newton-Raphson 
+Picard iteration method, or by applying the Newton-Raphson 
 linearization that is known to provide more stability when solving for
 cells that are under a water-table condition. For each cell in the
 the grid that is under variably saturated flow conditions, the
 linearized balance terms are added to the system representing the
 motion equations in the total (saturated and unsaturated) simulation 
-domain. This system is solved by the MODFLOW iterative solver as part
-of its outer (non-linear) iteration loop.
+domain. For every outer iteration, the linearized system is solved by 
+the MODFLOW iterative solver as part.
 
 \subsubsection*{Water Balance on a Cell}
 The variably saturated flow equation in CVFD form can be used to
