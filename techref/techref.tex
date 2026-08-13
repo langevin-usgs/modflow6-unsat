@@ -225,7 +225,8 @@ depends on direction \cite{bear-1987}.
 Using the results from previous sections, the macroscopic mass balance 
 equation for the flow of water in a partially saturated porous medium, 
 assuming that the air phase is stagnant and its pressure is atmospheric 
-everywhere, can be written as
+everywhere, can be written as\footnote{$s$ is a function of $\psi$ and
+that should be kept clear. Will update this.}
 \begin{equation}
   \left(s S_s  + C(\psi)\right)\frac{\partial h}{\partial t} =
   \nabla \cdot \left[ 
@@ -516,35 +517,83 @@ and $m = 1 - 1/n$ as before.
 
 \section{Numerical Solution}
 \label{sec-num-sol}
-Equation~\ref{eq-unsat-flow}, together with the boundary conditions as
-described in section~\ref{sec-boundary-conditions}, is a highly non-linear
-partial differential equation that has no general closed-form solution.
+Equation~\ref{eq-balance-equation-darcy}, together with the boundary 
+conditions described in section~\ref{sec-boundary-conditions}, is a 
+highly non-linear partial differential equation that has no general 
+closed-form solution.
 Although it can be considered a more advanced description of unconfined
 and partially saturated groundwater flow than the standard formulation
 available in MODFLOW 6, the solution strategy is the same. The variably
-saturated flow equation is discretized using a controle-volume
+saturated flow equation is discretized using the controle-volume
 finite-difference (CVFD) method. The method replaces the continuum of
-coordinates in equation~\ref{eq-unsat-flow} with a discrete set of 
-points in space and time. The control volume is called a cell and the
-point at the center of the cell a node. The collection of cells with
-their connections is the model grid. The partial derivatives in the
-equation can be approximated by differencing head values between 
-neighbouring cells and between subsequent time values. The resulting
-finite-difference equations will have terms that are a function
-of the discretized dependent variable, such as $k_r = k_r(h)$ and 
-$s = s(h)$. These non-linearities can be overcome using a standard
-Picard iteration method, or by applying the Newton-Raphson 
-linearization that is known to provide more stability when solving for
-cells that are under a water-table condition. For each cell in the
-the grid that is under variably saturated flow conditions, the
-linearized balance terms are added to the system representing the
-motion equations in the total (saturated and unsaturated) simulation 
-domain. For every outer iteration, the linearized system is solved by 
-the MODFLOW iterative solver as part.
+coordinates with a set of discrete points in space and time. 
+The control volume is called a cell and the  point at the center of 
+the cell a node. The collection of cells with their connections is the
+model grid. The partial derivatives in the equation can be approximated
+by differencing head values between neighbouring cells and between 
+subsequent time values. The resulting finite-difference equations will 
+have terms that are a function of the discretized dependent variable, 
+such as $k_r = k_r(h)$ and $s = s(h)$. These non-linearities can be 
+overcome using a standard Picard iteration method, or by applying 
+the Newton-Raphson linearization that is known to provide more stability
+when solving for cells that are under a water-table condition. 
+For each cell in the the grid that is under variably saturated flow 
+conditions, the linearized balance terms are added to the system 
+representing the motion equations in the total (saturated and unsaturated) 
+simulation domain. For every outer iteration, the linearized system is 
+solved by the MODFLOW iterative solver as part.
+
+\subsubsection*{Integration over the cell volume}
+Integration of equation~\ref{eq-balance-equation-darcy} over the representative
+elementary volume $V_n$ converts the equation into a water volume balance
+on cell $n$. Assuming that any source or sink is distributed uniformly
+throughout the cell, or that the specified rate always represents a volume
+average, its total volumetric rate for cell $n$ is:
+\begin{equation}
+  Q_{n, \Gamma} = \int_{V_n} \Gamma \,dV = V \Gamma_n.
+\end{equation}
+The integral over the change in storage can be calculated as
+\begin{eqnarray}
+  Q_{n,\Sigma} 
+    &=& \int_{V_n} \left( s(\psi) S_s  + C(\psi) \right)
+      \frac{\partial h}{\partial t} \,dV \\
+    &=& V_n  \left( s(\psi_n) S_s  + C(\psi_n) \right)
+      \frac{\partial h_n}{\partial t},
+\end{eqnarray}
+where it is used that $s_n$ and $\psi_n$ are representative values for
+cell $n$. Generally when $\psi$ is constant, $h$ will depend on the 
+coordinate $z$. But in this case
+\begin{eqnarray}
+  \int_{V_n} \frac{\partial h}{\partial t} \,dV 
+    &=& \int_{V_n} \frac{\partial (\psi - z)}{\partial t} \,dV \\
+    &=& \int_{V_n} \frac{\partial \psi}{\partial t} \,dV - 
+        \frac{\partial}{\partial t} \int_{V_n} z \,dV \\
+    &=& V_n \frac{\partial \psi_n}{\partial t} - 0 \\
+    &=& V_n \frac{\partial h_n}{\partial t}.
+\end{eqnarray}
+The time discretization of the storage term will be in 
+section~\ref{sec-temp-disc-sto}. Finally, the flux term
+can be manipulated, by applying Gauss' divergence theorem,
+into an integral over the surface $S_n$ that encloses the 
+cell volume:
+\begin{equation}  
+  \int_{V_n} \nabla \cdot \left[ 
+    k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h \right] \,dV =
+      \int_{S_n} \left[ 
+      k_\text{r}(s) \mathbf{K}_{\textrm{sat}} \cdot \nabla h \right] \,\cdot d\mathbf{S},
+\end{equation}
+such that the flow from cell $m$ into cell $n$ is given by the
+integral over the area of the interface:
+\begin{equation}
+  Q_{n,m} = \int_{S_n \cap S_m} \left[ k_\text{r}(s) \mathbf{K}_{\textrm{sat}} 
+    \cdot \nabla h \right] \cdot \,d\mathbf{S}
+\end{equation} 
+The spatial discretization of the Darcy flux expression will be the
+subject of section~\ref{sec-flow-discretization}.
 
 \subsubsection*{Water Balance on a Cell}
-The variably saturated flow equation in CVFD form can be used to
-express the concept of water balance on a cell $n$ as
+After the integration over the cell volume, the resulting equation
+represents the concept of (volumetric) water balance on a cell $n$ as
 \begin{equation}
   \sum_{m \in \eta_n} Q_{n,m} + Q_{n, \Gamma} - Q_{n,\Sigma} = 0,
   \label{eq-cell-balance}
@@ -665,11 +714,21 @@ convenience. The following sections will detail the various
 contributions to the terms in this equation.
 
 \subsection{Spatial Discretization and Internal Flows}
+\label{sec-flow-discretization}
 \subsection{Intercell Averaging of Conductance Terms}\label{sec-cond-avg}
 \subsubsection*{Saturated Hydraulic Conductivity}
 \subsubsection*{Relative Hydraulic Conductivity}
 
 \subsection{Temporal Discretization and Storage}
+\label{sec-temp-disc-sto}
+{\color{blue}
+The previous sections have been seriously revised, and the following
+paragraphs need to be rewritten. At the same time, I hope to introduce
+a clean way to track the change in $\rho\phi$ over time, somewhat
+pending on rounding up our discussion on specific storage and the
+moisture capacity function, i.e., is it $C = \phi ds/d\psi$ or 
+$C = d (\phi s)/d\psi$ and how is $S_s$ represented in either case.
+}
 For transient simulations, the change in storage is given by
 equation~\ref{eq-sto}. Because of the presence of both $h$ and
 $s$ as unknowns, this expression is known as the mixed-form
